@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include "utils.cpp"
 #include "fullBackup.cpp"
 #include "differentialBackup.cpp"
 #define PROJECT_NAME "linuxTimeMachine"
