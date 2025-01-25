@@ -1,6 +1,6 @@
 #include <iostream>
 #include "fullBackup.cpp"
-
+#include "differentialBackup.cpp"
 #define PROJECT_NAME "linuxTimeMachine"
 
 int main(int argc, char **argv) {
@@ -11,6 +11,9 @@ int main(int argc, char **argv) {
     std::cout << "This is project " << PROJECT_NAME << ".\n";
     
     std::cout<<fullBackup(argv[1], argv[2])<<std::endl;
+    
+    changedFileTester(argv[1]);
+    
 
     return 0;
 }
