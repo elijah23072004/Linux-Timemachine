@@ -26,7 +26,6 @@ bool doesEpochBackupExists(fs::path path, long epochTime){
 
     if(doesPathExist(path)) return true;
     dirName[dirName.size()-1] = 'i';
-    std::cout<<dirName<<std::endl;
     path.replace_filename(dirName);
     if(doesPathExist(path)) return true;
     return false;
