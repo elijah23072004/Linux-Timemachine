@@ -37,6 +37,8 @@ int fullBackup(fs::path inputPath, fs::path outputPath){
 
     fs::copy(inputPath, outputPath, options);
 
+    logBackup(newFolderName, outputPath.parent_path());
+
     return 0;
 }
 #endif

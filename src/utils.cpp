@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <time.h>
 #include <sys/stat.h>
+#include <fstream>
+#include <iostream>
 
 namespace fs = std::filesystem;
 //takes path as arguement and returns true if it exists in filesystem
@@ -29,6 +31,28 @@ bool doesEpochBackupExists(fs::path path, long epochTime){
     path.replace_filename(dirName);
     if(doesPathExist(path)) return true;
     return false;
+}
+
+void logBackup(std::string backupName, fs::path outputLocation){
+    fs::path backupLogFile = outputLocation / "backups.log";
+    fs::path fullBackupLog = outputLocation / "fullBackup.log";
+    std::ofstream of;
+    of.open(backupLogFile.c_str(), std::ios::app);
+    of<<backupName;
+    of<<"\n";
+    of.close();
+    
+    if (backupName.back() == 'f'){
+        of.open(fullBackupLog.c_str());
+    }
+    else{
+        of.open(fullBackupLog.c_str(), std::ios::app);
+    }
+    of<<backupName;
+    of<<"\n";
+    of.close();
+    
+    
 }
 
 #endif

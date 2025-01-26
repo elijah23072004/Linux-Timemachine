@@ -6,7 +6,8 @@
 #include <iostream>
 #include "utils.cpp"
 #include <sys/stat.h>
-
+#include <cstdlib>
+#include <fstream>
 namespace fs = std::filesystem;
 
 bool isFileModifiedAfterTime(fs::path file, long time){
@@ -33,7 +34,7 @@ std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime){
             if (isDirectory(entry)){
                 folderQueue.push_back(entry);
                 //add directory to queue to go to next 
-            }
+    }
         }
     }
     return changedFiles;
@@ -41,22 +42,39 @@ std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime){
 
 long findLastFullBackup(fs::path path){
     //fs::path lastBackup = "";
-    long lastBackupTime = 0;
+    fs::path logPath = path / "fullBackup.log";
+    if(!doesPathExist(logPath)){return 0;}
+    
+    std::ifstream f; 
+    f.open(logPath.c_str());
+    std::string line;
+    std::getline(f, line); 
+    line = line.substr(0,line.size()-1);
 
+    
+    return std::stoll(line);
+}
 
-    for (const auto & entry : fs::directory_iterator(path)){
-        std::string name = entry.path().filename();
-        if(name[name.size()-1] == 'f'){
-            std::string time = name.substr(0,name.size()-1);
-            long entryTime = std::stoll(time);
-            if(entryTime>lastBackupTime){
-                lastBackupTime = entryTime;
-                //lastBackup=entry;
-            }
-        }
+int calcualteAndStoreDiffFile(fs::path inputFile, fs::path oldFile, fs::path destinationLocation){
+    // -N makes sure that absent files are counted as empty
+    std::string command = "diff " + inputFile.string() + " " + oldFile.string() 
+        + " -N "  +  " > " + destinationLocation.string();
+    //std::cout<<command<<std::endl;
+    return system(command.data());
+}
+
+void createParentFolderIfDoesntExist(fs::path path){
+    std::cout<<path.string()<<std::endl;
+    fs::path parentPath = path.parent_path();
+    std::vector<fs::path> foldersToCreate;
+    while(!doesPathExist(parentPath)){
+        foldersToCreate.push_back(parentPath);
+        parentPath= parentPath.parent_path();
     }
-
-    return lastBackupTime;
+    for(fs::path folder : foldersToCreate){
+        fs::create_directory(folder);
+    }
+    return;
 }
 
 //differentialBackup takes 2 arguments 
@@ -81,6 +99,7 @@ int differentialBackup(fs::path inputPath, fs::path outputPath){
     std::cout<<"time of last backup: "<<lastBackup<<std::endl;
 
     std::string newFolderName = std::to_string(epochTime) + "i"; 
+    fs::path outputFolder = outputPath;
     outputPath.append(newFolderName);
     std::cout<<"output location: "<<outputPath.string()<<std::endl;
     try{ 
@@ -103,17 +122,25 @@ int differentialBackup(fs::path inputPath, fs::path outputPath){
         std::string relativePath = file.string().substr(inputPathLength);
         if(relativePath[0] == '/'){relativePath=relativePath.substr(1);}
         //not recursive by default when no copy options 
+        
+        //check parent folder exists since if parent folder doesnt exist file will not be created
+        createParentFolderIfDoesntExist(outputPath/relativePath);
+
+
         if(isDirectory(inputPath/relativePath)){
             fs::create_directory(outputPath/relativePath);
         }
         else{
-            fs::copy(inputPath / relativePath, outputPath / relativePath, fs::copy_options::none);
+            //fs::copy(inputPath / relativePath, outputPath / relativePath, fs::copy_options::none);
+            fs::path lastBackupFile = outputFolder.string() + std::to_string(lastBackup) + "f";
+            calcualteAndStoreDiffFile(inputPath/relativePath, lastBackupFile/relativePath, outputPath/relativePath);
         }
     }
 
-
+    logBackup(newFolderName, outputFolder);
     return 0;
 }
+
 
 void changedFileTester(fs::path path){
     //changed in last minute 
