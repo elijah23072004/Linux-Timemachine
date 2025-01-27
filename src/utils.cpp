@@ -23,6 +23,18 @@ bool isDirectory(fs::path path)
 {
     return fs::is_directory(path);
 }
+void writeToFile(fs::path path, std::string text, bool append=false){
+    std::ofstream of;
+    if(append){
+        of.open(path.c_str(), std::ios::app);
+    }
+    else{
+        of.open(path.c_str());
+    }
+    of<<text;
+    of.close();
+    return;    
+}
 //returns true if a folder with epochtime +'i' or +'f' exists 
 //takes fs::path path and long epochtime as arguments
 bool doesEpochBackupExists(fs::path path, long epochTime){
@@ -39,27 +51,13 @@ bool doesEpochBackupExists(fs::path path, long epochTime){
 void logBackup(std::string backupName, fs::path outputLocation){
     fs::path backupLogFile = outputLocation / "backups.log";
     fs::path fullBackupLog = outputLocation / "fullBackup.log";
-    std::ofstream of;
-    of.open(backupLogFile.c_str(), std::ios::app);
-    of<<backupName;
-    of<<"\n";
-    of.close();
-    
-    if (backupName.back() == 'f'){
-        of.open(fullBackupLog.c_str());
-    }
-    else{
-        of.open(fullBackupLog.c_str(), std::ios::app);
-    }
-    of<<backupName;
-    of<<"\n";
-    of.close();
-    
-    
+    std::string text = backupName + "\n";
+    bool append = backupName.back() == 'f';
+    writeToFile(fullBackupLog,text, append);
+    writeToFile(backupLogFile,text, true);
 }
 
 void createParentFolderIfDoesntExist(fs::path path){
-    std::cout<<path.string()<<std::endl;
     fs::path parentPath = path.parent_path();
     std::vector<fs::path> foldersToCreate;
     while(!doesPathExist(parentPath)){
@@ -108,5 +106,34 @@ void recoverFileTest(){
 
 }
 
-
+std::string getFileTree(fs::path path){
+    std::string fileTree = "";
+    std::vector<fs::path> folderQueue;
+    folderQueue.push_back(path);
+    fs::path currentPath;
+    while(!folderQueue.empty()){
+        currentPath = folderQueue.at(0);
+        folderQueue.erase(folderQueue.begin());
+        for(const  fs::path & entry : fs::directory_iterator(currentPath)){
+            fileTree += entry.string() + "\n";
+            if(is_directory(entry)){
+                folderQueue.push_back(entry);
+            }
+        }
+    }
+    //remove \n at end of string only if string is not empty 
+    if(fileTree != ""){
+        return fileTree.substr(0,fileTree.size()-1);
+    }
+    return fileTree;
+}
+//takes inputPAth as argumetn which is location where file tree should be made of 
+//and destination as arguement which is the full path of where to save file tree
+void saveFileTree(fs::path inputPath, fs::path destination){
+    //creates folder to store destination if doesn't exist
+    std::string tree = getFileTree(inputPath);
+    createParentFolderIfDoesntExist(destination);
+    writeToFile(destination, tree);
+}
 #endif
+

@@ -36,7 +36,8 @@ int fullBackup(fs::path inputPath, fs::path outputPath){
                     
 
     fs::copy(inputPath, outputPath, options);
-
+    fs::path fileTreeDestination = outputPath.parent_path() / "fileTrees"/newFolderName;
+    saveFileTree(inputPath, fileTreeDestination);
     logBackup(newFolderName, outputPath.parent_path());
 
     return 0;

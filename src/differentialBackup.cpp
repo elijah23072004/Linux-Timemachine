@@ -131,7 +131,8 @@ int differentialBackup(fs::path inputPath, fs::path outputPath){
 
         }
     }
-
+    fs::path fileTreeDestination = outputFolder / "fileTrees" / newFolderName;
+    saveFileTree(inputPath, fileTreeDestination);
     logBackup(newFolderName, outputFolder);
     return 0;
 }
