@@ -52,7 +52,7 @@ void logBackup(std::string backupName, fs::path outputLocation){
     fs::path backupLogFile = outputLocation / "backups.log";
     fs::path fullBackupLog = outputLocation / "fullBackup.log";
     std::string text = backupName + "\n";
-    bool append = backupName.back() == 'f';
+    bool append = backupName.back() != 'f';
     writeToFile(fullBackupLog,text, append);
     writeToFile(backupLogFile,text, true);
 }
@@ -84,26 +84,26 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
     fs::copy(fileLocation, outputLocation, fs::copy_options::overwrite_existing);
     backupLocations.erase(backupLocations.begin());
     for(fs::path location : backupLocations){
-        std::string command = "patch -N " + outputLocation.string() + " < " + (backupFolder/location/relativePath).string();
-        std::cout<<command<<std::endl;
+        std::string command = "patch -Ns " + outputLocation.string() + " < " + (backupFolder/location/relativePath).string();
+        //std::cout<<command<<std::endl;
         system(command.c_str());
     }
     return outputLocation;
 
 }
 
-
-void recoverFileTest(){
-    std::vector<fs::path> locs;
-    locs.push_back("f1");
-    locs.push_back("f2");
-    locs.push_back("f3");
-    locs.push_back("f4");
-    locs.push_back(".f5");
-    fs::path outputLocation = "./rec/temp/";
-    fs::path relativePath = "file.txt";
-    std::cout<<(recoverFile(relativePath,locs, outputLocation, ".rec/")).string()<<std::endl;
-
+std::vector<fs::path> findBackups(fs::path path){
+    fs::path logPath = path/"fullBackup.log";
+    std::vector<fs::path> backups;
+    std::ifstream f;
+    f.open(logPath.c_str());
+    std::string line;
+    while(std::getline(f,line)){
+        if(line == ""){continue;}
+        backups.push_back(fs::path{line});
+    }
+    return backups;
+    
 }
 
 std::string getFileTree(fs::path path){
@@ -135,5 +135,6 @@ void saveFileTree(fs::path inputPath, fs::path destination){
     createParentFolderIfDoesntExist(destination);
     writeToFile(destination, tree);
 }
+
 #endif
 

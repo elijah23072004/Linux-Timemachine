@@ -41,19 +41,7 @@ std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime){
 }
 
 
-std::vector<fs::path> findBackups(fs::path path){
-    fs::path logPath = path/"fullBackup.log";
-    std::vector<fs::path> backups;
-    std::ifstream f;
-    f.open(logPath.c_str());
-    std::string line;
-    while(std::getline(f,line)){
-        if(line == ""){continue;}
-        backups.push_back(fs::path{line});
-    }
-    return backups;
-    
-}
+
 
 int calcualteAndStoreDiffFile(fs::path inputFile, fs::path oldFile, fs::path destinationLocation){
     // -N makes sure that absent files are counted as empty
