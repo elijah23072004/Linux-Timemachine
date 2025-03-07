@@ -1,0 +1,70 @@
+Have folder for test data
+where set input folders
+with set output folders
+
+e.g. 
+input1:
+originalData
+input2: 
+orignalDataChanged
+
+output1:
+empty folder
+output2:
+folder when output1 backed up to (time before input2 data changed) 
+with input2 as input folder
+output3: 
+folder with 10 differential backups (with folder input3 as input) to test if 
+program does full backup
+output4:
+deleted file in input folder to test
+
+can use other output folders to test file tree 
+and recovery of files 
+
+
+use this to make a test suite
+
+
+these will test with compression off when that functionality is added 
+
+
+
+will need cleanup scripts to run at end of each individual test to make 
+sure output folders are unchanged 
+
+to test backup 
+can backup and have alternate versions of output folders with correct diffs 
+and to test recovery can compare recovered files to original 
+and make sure that files are identical to make sure that test works 
+
+test that recover wont recover a deleted file 
+(if it was deleted in a previous backup then dont recover that file unless recovering 
+from previous backup or older)
+
+
+will need to test error codes on backup functions 
+so will need specific input folders which will error
+
+also test log files to make sure correct output exists 
+(will need to generate the correct output since the log file data will depend when 
+program
+executed) could be done by storing epoch tiem of start of bakup and end 
+and make sure that each value in the log file is between the values and in 
+ascending order 
+
+
+
+also test that backups before the last full backup can be recovered 
+(currently they can't be)
+
+
+
+when compression is added 
+do all tests above again with compression 
+and test if it can find compressed file
+and if it can recover and create compressed file 
+and if it combines files into a zip of correct size or smaller 
+
+
+
