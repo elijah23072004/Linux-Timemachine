@@ -9,6 +9,14 @@ public:
     BackupAppWindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refBuilder);
     
     static BackupAppWindow* create();
+    
+    void logClicked();
+    void backupClicked();
+    void restoreClicked();
+    void editClicked();
+    void settingsClicked();
+    void tutorialClicked();
+    void quitClicked();
 
 protected:
     Glib::RefPtr<Gtk::Builder> m_refBuilder;
@@ -18,6 +26,7 @@ protected:
     Gtk::Button* m_edit {nullptr};
     Gtk::Button* m_settings {nullptr};
     Gtk::Button* m_tutorial {nullptr};
+    Gtk::Button* m_quit {nullptr};
     
     Gtk::SearchBar* m_searchbar {nullptr};
     Gtk::SearchEntry* m_searchentry {nullptr};

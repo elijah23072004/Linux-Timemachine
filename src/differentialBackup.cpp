@@ -34,7 +34,7 @@ std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime){
             if (isDirectory(entry)){
                 folderQueue.push_back(entry);
                 //add directory to queue to go to next 
-    }
+            }
         }
     }
     return changedFiles;
@@ -60,13 +60,12 @@ int calcualteAndStoreDiffFile(fs::path inputFile, fs::path oldFile, fs::path des
 //3 if folder with same epoch time already exist 
 //4 if invalid permissions for either inputPath or outputPath 
 //5 if no previous fullBackup exists
-int differentialBackup(fs::path inputPath, fs::path outputPath){
-
+int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression=false){
     if(!(isDirectory(inputPath) && isDirectory(outputPath))) return 2;
     long epochTime = std::time(0);
     if(doesEpochBackupExists(outputPath, epochTime)) return 3;
 
-    std::vector<fs::path> backups = findBackups(outputPath);
+    std::vector<fs::path> backups = findRecentBackups(outputPath);
     long lastBackupTime= std::stoll(backups.at(backups.size()-1).string().substr(0, backups.at(0).string().size()-1));
     
    
@@ -103,7 +102,7 @@ int differentialBackup(fs::path inputPath, fs::path outputPath){
         //check parent folder exists since if parent folder doesnt exist file will not be created
         createParentFolderIfDoesntExist(outputPath/relativePath);
 
-
+ 
         if(isDirectory(inputPath/relativePath)){
             fs::create_directory(outputPath/relativePath);
         }
@@ -120,6 +119,12 @@ int differentialBackup(fs::path inputPath, fs::path outputPath){
         }
     }
     fs::path fileTreeDestination = outputFolder / "fileTrees" / newFolderName;
+
+    if(compression){
+        long compressionSize = 32768;
+
+        compressBackupDirectory(outputPath, outputPath.parent_path() / "backupMaps"/newFolderName, compressionSize);
+    }
     saveFileTree(inputPath, fileTreeDestination);
     logBackup(newFolderName, outputFolder);
     return 0;

@@ -23,6 +23,27 @@ bool isDirectory(fs::path path)
 {
     return fs::is_directory(path);
 }
+
+std::string trimWhitespace(std::string str){
+    int start=0;
+    int end=str.size()-1;
+    char whiteSpace[] = {' ', '\t', '\n'};
+    for(int i=0;str[i];i++){
+        if(strchr(whiteSpace, str[i]) == NULL){
+            start=i; 
+            break;
+        }
+    }
+    for(int i=str.size(); i>=0;i--){
+        if(strchr(whiteSpace, str[i]) == NULL){
+            end=i+1; 
+            break;
+        }
+    }
+
+    return str.substr(start,end-start);
+}
+
 void writeToFile(fs::path path, std::string text, bool append=false){
     std::ofstream of;
     if(append){
@@ -69,6 +90,20 @@ void createParentFolderIfDoesntExist(fs::path path){
     }
     return;
 }
+
+
+std::vector<std::string> split(std::string str, char delimiter)
+{
+  // Using str in a string stream
+    std::stringstream ss(str);
+    std::vector<std::string> res;
+    std::string token;
+    while (getline(ss, token, delimiter)) {
+        res.push_back(token);
+    }
+    return res;
+}
+
 //takes relativePath as arguemnt which is the relative path of a file to the start of a backup 
 //and a vector of paths (backupLocations) which stores all the backups to look at with the first in the vector
 //to be the full backup
@@ -81,10 +116,89 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
     fs::path fileLocation = backupFolder / backupLocations.at(0) / relativePath;
     outputLocation/=std::to_string(std::time(0));
     createParentFolderIfDoesntExist(outputLocation);
-    fs::copy(fileLocation, outputLocation, fs::copy_options::overwrite_existing);
+    std::cout<<backupFolder << " backupMaps " <<backupLocations.at(0).filename()<<std::endl; 
+    if(doesPathExist(backupFolder / "backupMaps" / backupLocations.at(0).filename())){
+        std::ifstream f;
+        f.open( (backupFolder / "backupMaps" / backupLocations.at(0).filename()).c_str() );
+        std::string line; 
+        bool found = false;
+        while(std::getline(f,line)){
+            if(found){
+                break;
+            }
+            std::cout<<line<<std::endl;
+            line = trimWhitespace(line);
+            if(line == relativePath.parent_path()){
+                std::getline(f,line);
+                line = trimWhitespace(line);
+                std::vector<std::string> files = split(line, ',');
+                for(unsigned int i=0; i<files.size();i++){
+                    if(files.at(i) == relativePath){
+                        //archive has this file
+                        //will override file if file with same name exists in directory however should always call this into tmp directory and shouldn't happen since file names 
+                        //will have random numeric number
+                        std::string command = "tar -zxvf " + (backupFolder / backupLocations.at(0) /  files.at(0)).string() 
+                            + " --directory="+outputLocation.parent_path().string() + " " + relativePath.filename().string();
+                        system(command.c_str());
+                        fs::rename(outputLocation.parent_path() / relativePath.filename(), outputLocation);
+                        found=true;
+                        break;
+                    }
+                }
+            }
+        }
+        std::cout<<"after while loop"<<std::endl;
+
+    }
+
+    else {
+        fs::copy(fileLocation, outputLocation, fs::copy_options::overwrite_existing);
+    }   
     backupLocations.erase(backupLocations.begin());
     for(fs::path location : backupLocations){
-        std::string command = "patch -Ns " + outputLocation.string() + " < " + (backupFolder/location/relativePath).string();
+        std::string diffLocation = (backupFolder/location/relativePath).string();
+        
+        std::cout<<backupFolder / "backupMaps"/ location.filename()<<std::endl;
+        if(doesPathExist(backupFolder / "backupMaps" / location.filename()))
+        {
+            std::cout<<"a"<<std::endl;
+            std::ifstream f;
+            f.open( (backupFolder / "backupMaps" / location.filename()).c_str() );
+            std::string line; 
+            bool found = false;
+            while(std::getline(f,line)){
+                if(found){
+                    break;
+                }
+                line = trimWhitespace(line);
+                if(line == relativePath.parent_path().string()){
+                    std::getline(f,line);
+                    line = trimWhitespace(line);
+                    std::vector<std::string> files = split(line, ',');
+                    for(unsigned int i=1; i<files.size();i++){
+                        if(files.at(i) == relativePath){
+                            //archive has this file
+                            //will override file if file with same name exists in directory however should always call this into tmp directory and shouldn't happen since file names 
+                            //will have random numeric number
+                            std::string command = "tar -zxvf " + (backupFolder / location /  files.at(0)).string() 
+                                + " --directory="+outputLocation.parent_path().string() + " " + relativePath.filename().string();
+                            system(command.c_str());
+                            diffLocation = outputLocation.parent_path() / relativePath.filename();
+                        
+                            found=true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if(!found){
+                //if not found then file was not changed in this backup
+                std::cout<<"file not found in backup : "<<location<<std::endl;
+                continue;
+            }
+        }
+
+        std::string command = "patch -Ns " + outputLocation.string() + " < " + diffLocation;
         //std::cout<<command<<std::endl;
         system(command.c_str());
     }
@@ -93,7 +207,7 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
 }
 
 std::vector<fs::path> findBackups(fs::path path){
-    fs::path logPath = path/"fullBackup.log";
+    fs::path logPath = path/"backups.log";
     std::vector<fs::path> backups;
     std::ifstream f;
     f.open(logPath.c_str());
@@ -104,6 +218,41 @@ std::vector<fs::path> findBackups(fs::path path){
     }
     return backups;
     
+}
+//lastBackup is just the filename of the backup so just {epochTime}{f/i}
+std::vector<fs::path> findBackupRecoveryList(fs::path logLocation, fs::path lastBackup){
+    std::vector<fs::path> backups = findBackups(logLocation);
+    int lastFullBackup = 0;
+    int end;
+    bool found=false;
+    for(unsigned int i=0; i<backups.size(); i++){
+        if(backups.at(i).string().back() == 'f'){
+            lastFullBackup = i;
+        }
+        if(backups.at(i) == lastBackup){
+            end=i;
+            found=true;
+            break;
+        }
+    }
+    if(found == false) {throw std::invalid_argument("backup not found in backups.log");}
+    backups.assign(backups.begin()+lastFullBackup, backups.begin()+end+1);
+
+    return backups;
+
+}
+
+std::vector<fs::path> findRecentBackups(fs::path path){
+    fs::path logPath = path/"fullBackup.log";
+    std::vector<fs::path> backups;
+    std::ifstream f;
+    f.open(logPath.c_str());
+    std::string line;
+    while(std::getline(f,line)){
+        if(line == ""){continue;}
+        backups.push_back(fs::path{line});
+    }
+    return backups;
 }
 
 std::string getFileTree(fs::path path){
@@ -135,6 +284,84 @@ void saveFileTree(fs::path inputPath, fs::path destination){
     createParentFolderIfDoesntExist(destination);
     writeToFile(destination, tree);
 }
+//all files should be in same folder, because the output of the tar file will be in the folder containing file 0 in files
+std::string compressAndDeleteFiles(std::vector<fs::path> files){
+    int i=0;
+    std::string backupLocation = files.at(0).parent_path() / "0.tar";
+    while(doesPathExist(backupLocation)){
+        i++;
+        backupLocation = files.at(0).parent_path() / (i+".tar");
+    }
+    std::string command = "tar czf " + backupLocation + " -C" + files.at(0).parent_path().string();
+    for(fs::path file :files){
+        command += " " + file.filename().string();
 
+    }
+    system(command.c_str());
+
+    for(fs::path file : files){
+        fs::remove(file);
+    }
+    return backupLocation;
+}
+
+//takes tarSize as long in bytes
+void compressBackupDirectory(fs::path backupLocation, fs::path backupMapFile, long tarSize){
+    std::string backupMap = "";
+    std::vector<fs::path> folderQueue;
+    folderQueue.push_back(backupLocation);
+    fs::path currentPath;
+    while(!folderQueue.empty()){
+        currentPath = folderQueue.at(0);
+        folderQueue.erase(folderQueue.begin());
+        std::vector<fs::path> nonDirectoryVec;
+
+        for(const fs::path & entry : fs::directory_iterator(currentPath)){
+            if(is_directory(entry)){
+                folderQueue.push_back(entry);
+            }
+            else{
+                nonDirectoryVec.push_back(entry);
+            }
+        }
+
+        int sum=0;
+        std::vector<fs::path> compressionFiles;
+        if(!nonDirectoryVec.empty()){
+            std::string relativePath = currentPath.string().substr(backupLocation.string().size());
+            if(relativePath.size() == 0) {
+                relativePath = "";
+            }
+            else{
+                relativePath=relativePath.substr(1);
+            }
+            backupMap += relativePath + "\n";
+        }
+        while(!nonDirectoryVec.empty()){
+            sum+=std::filesystem::file_size(nonDirectoryVec.at(0));
+            compressionFiles.push_back(nonDirectoryVec.at(0));
+            nonDirectoryVec.erase(nonDirectoryVec.begin()); 
+            if(sum >= tarSize){
+                std::string compressionName = compressAndDeleteFiles(compressionFiles);
+                backupMap += compressionName.substr(backupLocation.string().size()+1);
+                for(fs::path file : compressionFiles){
+                    backupMap += "," + file.string().substr(backupLocation.string().size()+1);
+                }
+                compressionFiles.clear();
+                backupMap += "\n";
+            }
+        }
+        if(!compressionFiles.empty()){
+            std::string compressionName = compressAndDeleteFiles(compressionFiles);
+            backupMap += compressionName.substr(backupLocation.string().size()+1);
+            for(fs::path file : compressionFiles){
+                backupMap += "," + file.string().substr(backupLocation.string().size()+1);
+            }
+            backupMap += "\n";
+        }
+    }
+    std::cout<<backupMapFile<<std::endl;
+    createParentFolderIfDoesntExist(backupMapFile);
+    writeToFile(backupMapFile, backupMap);
+}
 #endif
-

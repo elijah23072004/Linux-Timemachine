@@ -10,7 +10,6 @@
 int handleInput(int,char **);
 int parseConfigFile(std::string);
 int main(int argc, char **argv) {
-
     if(argc == 1) {
         return parseConfigFile("./config.conf");;
     }
@@ -54,30 +53,13 @@ int handleInput(int argc, char ** argv){
     return 0;
 }
 
-std::string trimWhitespace(std::string str){
-    int start=0;
-    int end=str.size()-1;
-    char whiteSpace[] = {' ', '\t', '\n'};
-    for(int i=0;str[i];i++){
-        if(strchr(whiteSpace, str[i]) == NULL){
-            start=i; 
-            break;
-        }
-    }
-    for(int i=str.size(); i>=0;i--){
-        if(strchr(whiteSpace, str[i]) == NULL){
-            end=i+1; 
-            break;
-        }
-    }
 
-    return str.substr(start,end-start);
-}
 
 int parseConfigFile(std::string fileLocation){
     std::string inputLocation="";
     std::string outputLocation="";
     std::string backupMode="";
+    bool compression = false;
     bool schedule;
     //how many x differential backups till a full backup should be done 
     int backupRatio = 0;
@@ -147,6 +129,19 @@ int parseConfigFile(std::string fileLocation){
                 throw std::invalid_argument("cannot have ratio between backups as a negative number");
             }
         }
+        else if(text =="[compression]"){
+            getline(myFile,text);
+            text = trimWhitespace(text);
+            if(text == "true"){
+                compression=true;
+            }
+            else if(text == "false"){
+                compression=false;
+            }
+            else{
+                throw std::invalid_argument("compression must be either true or false");
+            }
+        }
     }
     if(inputLocation.empty() || outputLocation.empty() || (backupMode.empty() && !schedule )) {
         std::cout<<"field empty in "<<std::endl;
@@ -162,11 +157,11 @@ int parseConfigFile(std::string fileLocation){
         int numberPreviousBackups = findBackups(outputLocation).size();
         std::cout<<numberPreviousBackups<<std::endl;
         if(numberPreviousBackups == 0 || numberPreviousBackups>=backupRatio){
-            std::cout<<fullBackup(inputLocation,outputLocation)<<std::endl;
+            std::cout<<fullBackup(inputLocation,outputLocation, compression)<<std::endl;
             return 0;
         }
         else{
-            std::cout<<differentialBackup(inputLocation,outputLocation)<<std::endl;
+            std::cout<<differentialBackup(inputLocation,outputLocation, compression)<<std::endl;
             return 0;
         }
     }

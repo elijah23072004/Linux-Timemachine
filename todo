@@ -1,0 +1,3 @@
+Use predicates to for 
+file mapping procedures 
+since same code for walking file tree repeated often with only difference being what to do with file

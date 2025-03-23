@@ -17,7 +17,7 @@ namespace fs = std::filesystem;
 //returns 0 for sucess, 1 for out of space error, 2 if either path is not a folder,#
 //3 if folder with same epoch time already exist 
 //4 if invalid permissions for either inputPath or outputPath 
-int fullBackup(fs::path inputPath, fs::path outputPath){
+int fullBackup(fs::path inputPath, fs::path outputPath, bool compression=false){
     if(!(isDirectory(inputPath) && isDirectory(outputPath))) return 2;
     long epochTime = std::time(0);
     if(doesEpochBackupExists(outputPath, epochTime)) return 3;
@@ -37,6 +37,12 @@ int fullBackup(fs::path inputPath, fs::path outputPath){
 
     fs::copy(inputPath, outputPath, options);
     fs::path fileTreeDestination = outputPath.parent_path() / "fileTrees"/newFolderName;
+
+    if(compression){
+        long compressionSize = 32768;
+        compressBackupDirectory(outputPath, outputPath.parent_path() / "backupMaps"/newFolderName, compressionSize);
+    }
+
     saveFileTree(inputPath, fileTreeDestination);
     logBackup(newFolderName, outputPath.parent_path());
 

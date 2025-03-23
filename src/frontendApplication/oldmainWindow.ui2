@@ -5,20 +5,6 @@
         <property name="default-width">600</property>
         <property name="default-height">400</property>
         <property name="hide-on-close">True</property>
-        <child type="titlebar">
-            <object class="GtkHeaderBar" id="header">
-                <child>
-                        <object class="GtkButton" id="settings">
-                            <property name="label">Settings</property>
-                        </object>
-                </child>
-                <child type="end">
-                        <object class="GtkButton" id="quit">
-                            <property name="label">Quit</property>
-                        </object>
-                </child>
-            </object>
-        </child>
         <child>
             <object class="GtkGrid" id="menuButtons">
                 <child>
@@ -43,7 +29,7 @@
                     <object class="GtkButton" id="restore">
                         <property name="label">Restore</property>
                         <layout>
-                            <property name="column">2</property>>
+                            <property name="column">2</property>
                             <property name="row">0</property>
                         </layout>
                     </object>
@@ -58,30 +44,54 @@
                     </object>
                 </child>
                 <child type="end">
-                    <object class="GtkButton" id="tutorial">
-                        <property name="label">Tutorial</property>
+                    <object class="GtkButton" id="settings">
+                        <property name="label">Settings</property>
                         <layout>
                             <property name="column">4</property>
                             <property name="row">0</property>
                         </layout>
                     </object>
                 </child>
+                <child type="end">
+                    <object class="GtkButton" id="tutorial">
+                        <property name="label">Tutorial</property>
+                        <layout>
+                            <property name="column">5</property>
+                            <property name="row">0</property>
+                        </layout>
+                    </object>
+                </child>
+            </object>
+        </child>
+        <child>
+            <object class="GtkBox" id="last_backups">
+                <property name="orientation">vertical</property>
                 <child>
-                <object class="GtkBox" id="last_backups">
-                    <property name="orientation">vertical</property>
-                    <child>
-                        <object class="GtkSearchBar" id="backupSearch">
-                            <child>
-                                <object class="GtkSearchEntry" id="backupSearchEntry">
-                                </object>
-                            </child>
-                        </object>
-                    </child>
-                    <layout>
-                        <property name="column">0</property>
-                        <property name="row">1</property>
-                    </layout>
-                </object>
+                    <object class="GtkSearchBar" id="backupSearch">
+                        <child>
+                            <object class="GtkSearchEntry" id="backupSearchEntry">
+                            </object>
+                        </child>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkBox" id="hbox">
+                        <child>
+                            <object class="GtkRevealer" id="sidebar">
+                                <property name="transition-type">slide-right</property>
+                                <child>
+                                    <object class="GtkScrolledWindow" id="sidebar-sw">
+                                        <property name="hscrollbar-policy">never</property>
+                                        <child>
+                                            <object class="GtkListBox" id="backups">
+                                                <property name="selection-mode">none</property>
+                                            </object>
+                                        </child>
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                    </object>
                 </child>
             </object>
         </child>
