@@ -39,16 +39,68 @@ int handleInput(int argc, char ** argv){
     else{
         inputLocation = argv[1];
         outputLocation = argv[2];
-        if( strcmp(argv[3], "-f") == 0 ){
+        std::string flags = argv[3];
+        bool compression = false;
+        char backupMode = '0';
+        int backupRatio;
+        if(flags[0] != '-'){
+            std::cout<<"invalid second argument"<<std::endl;
+            return -1;
+        }
+        flags = flags.substr(1);
+        
+        for(char val : flags){
+            if(val == 'c'){
+                if (compression){
+                    std::cout<<"c in flag argument multiple times"<<std::endl;
+                    return -1;
+                }
+                compression=true;
+            }
+            else if(val == 'f'){
+                if(backupMode != '0'){
+                    std::cout<<"multiple backup modes in flag argument"<<std::endl;
+                }
+                backupMode ='f'; 
+            }
+            else if (val == 'd'){
+                if(backupMode != '0'){
+                    std::cout<<"multiple backup modes in flag argument"<<std::endl;
+                }
+                backupMode ='d'; 
+            }
+            else if ( val == 'r'){
+                backupRatio = std::stoi(argv[4]);
+                if(backupMode != '0'){
+                    std::cout<<"multiple backup modes in flag argument"<<std::endl;
+                }
+                backupMode = 'r';
+            }
+        }
+
+        if( backupMode == 'f' ){
             
             std::cout<<fullBackup(inputLocation,outputLocation)<<std::endl;
         }
-        else if (strcmp(argv[3] ,"-d") == 0){
+        else if (backupMode == 'd'){
             std::cout<<differentialBackup(inputLocation, outputLocation)<<std::endl;
         }
-        else{
-            std::cout<<"invalid backup mode"<<std::endl;
-        }
+        else if (backupMode == 'r'){
+            
+            int numberPreviousBackups = findRecentBackups(outputLocation).size();
+            std::cout<<numberPreviousBackups<<std::endl;
+            if(numberPreviousBackups == 0 || numberPreviousBackups>=backupRatio){
+                std::cout<<fullBackup(inputLocation,outputLocation, compression)<<std::endl;
+                return 0;
+            }
+            else{
+                std::cout<<differentialBackup(inputLocation,outputLocation, compression)<<std::endl;
+                return 0;
+            }
+            }
+            else{
+                std::cout<<"invalid backup mode"<<std::endl;
+            }
     }
     return 0;
 }

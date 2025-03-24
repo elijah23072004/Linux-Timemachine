@@ -11,7 +11,7 @@
 #include <cstdlib>
 #include <vector>
 #include <ctime>
-
+#include <cstring>
 namespace fs = std::filesystem;
 //takes path as arguement and returns true if it exists in filesystem
 bool doesPathExist(fs::path path){
