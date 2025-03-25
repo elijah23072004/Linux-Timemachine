@@ -13,7 +13,7 @@ int main(int argc, char* argv[]){
     srand(time(NULL));
 
     //5GB target file size 
-    long targetSize = 5000000000;
+    long targetSize = 2500000000;
 
     if(argc < 2) {return -1;}
 

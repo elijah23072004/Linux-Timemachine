@@ -101,7 +101,6 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
         
         //check parent folder exists since if parent folder doesnt exist file will not be created
         createParentFolderIfDoesntExist(outputPath/relativePath);
-
  
         if(isDirectory(inputPath/relativePath)){
             fs::create_directory(outputPath/relativePath);
@@ -110,11 +109,10 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
 
             //recover file from previous diffs to allow diff to be calcualetd from previous differential backups 
             fs::path lastBackupFile = recoverFile(relativePath, backups, outputFolder / "tmp", outputFolder ); 
-
             calcualteAndStoreDiffFile(inputPath/relativePath, lastBackupFile, outputPath/relativePath);
-
+            
             //delete temporary file storing changed files
-            fs::remove(lastBackupFile);
+            //fs::remove(lastBackupFile);
 
         }
     }
@@ -122,7 +120,6 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
 
     if(compression){
         long compressionSize = 32768;
-
         compressBackupDirectory(outputPath, outputPath.parent_path() / "backupMaps"/newFolderName, compressionSize);
     }
     saveFileTree(inputPath, fileTreeDestination);
