@@ -92,7 +92,7 @@ void changeFileSystem(fs::path path, unsigned int targetSize)
     }
     
     long bytesLeft = targetSize;
-    long averageChange = 200;
+    long averageChange = targetSize/25;
 
 
     while(bytesLeft>0){

@@ -209,7 +209,7 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
         std::string command = "patch -Ns " + outputLocation.string() + " < " + diffLocation + " >nul";
         //std::cout<<command<<std::endl;
         system(command.c_str());
-        //fs::remove_all(outputLocation.parent_path()/"tarFolder");
+        fs::remove_all(outputLocation.parent_path()/"tarFolder");
     }
     return outputLocation;
 

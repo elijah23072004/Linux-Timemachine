@@ -112,7 +112,7 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
             calcualteAndStoreDiffFile(inputPath/relativePath, lastBackupFile, outputPath/relativePath);
             
             //delete temporary file storing changed files
-            //fs::remove(lastBackupFile);
+            fs::remove(lastBackupFile);
 
         }
     }

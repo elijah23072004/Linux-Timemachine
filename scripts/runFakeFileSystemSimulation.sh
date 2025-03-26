@@ -4,6 +4,9 @@ output2="/home/eli/Documents/backupsTest/compression"
 flags1="-r 50"
 flags2="-cr 50"
 changeAmount="25000000"
+rm ${output1} -r 
+rm ${output2} -r 
+rm ${location} -r 
 
 mkdir ${output1}
 mkdir ${output2}
