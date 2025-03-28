@@ -1,7 +1,16 @@
 #include "backupappwindow.h"
 #include <iostream>
 #include <stdexcept>
+#include <filesystem>
+#include <vector>
+#include <string>
+#include <ctime>
+
 #include <set>
+#include "../utils.cpp"
+
+namespace fs = std::filesystem;
+
 
 BackupAppWindow::BackupAppWindow(BaseObjectType* cobject, 
                                  const Glib::RefPtr<Gtk::Builder>& refBuilder)
@@ -49,15 +58,24 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     m_searchbar = m_refBuilder->get_widget<Gtk::SearchBar>("backupSearch");
     if(!m_searchbar)
         throw std::runtime_error("No \"backupSearch\" object in mainWindow.ui");
-/*
-    m_backups = m_refBuilder->get_widget<Gtk::ListBox>("backups");
+
+    m_backups = m_refBuilder->get_widget<Gtk::ListBox>("backupList");
     if(!m_backups)
         throw std::runtime_error("No \"backups\" object in mainWindow.ui");
-*/
+    m_fileTree = m_refBuilder->get_widget<Gtk::ListBox>("fileTree");
+    if(!m_fileTree)
+        throw std::runtime_error("No \"fileTree\" object in mainWindow.ui");
+
     //need to set widths and locations of log,backup,restore,edit,tutorial buttons so fit top width of screen 
     //row->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,
     //  &ExampleAppWindow::on_find_word), row));
-    
+   
+    fs::path outputDir = "./test_data/output";
+    populateBackups(outputDir);
+
+    std::string tmp = readFromFile(outputDir/"backups.log");
+    std::string firstBackup = split(tmp,'\n').at(0);
+    populateFileTree(outputDir/"fileTrees"/firstBackup);
 }
 
 //static
@@ -73,7 +91,6 @@ BackupAppWindow* BackupAppWindow::create()
 
 void BackupAppWindow::quitClicked(){
     std::cout<<"quitting"<<std::endl;
-    
 }
 
 void BackupAppWindow::logClicked(){
@@ -93,4 +110,52 @@ void BackupAppWindow::settingsClicked(){
 }
 void BackupAppWindow::tutorialClicked(){
     std::cout<<"tutorial"<<std::endl;
+}
+
+
+void BackupAppWindow::populateBackups(fs::path backupLocation){
+    fs::path backupLog = backupLocation / "backups.log";
+    std::string backups = readFromFile(backupLog);
+    
+    std::vector<std::string> backupVec = split(backups, '\n');
+    Gtk::Label  label = Gtk::Label("Backups:");
+    m_backups->append(label);
+    Gtk::Button* select = new Gtk::Button("Select Backup");
+    select->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,&BackupAppWindow::backupSelected)));
+    m_backups->append(*select);
+    for(int i=backupVec.size()-1; i>=0; i--){
+        std::string backup = backupVec.at(i);
+        long epochTime = std::stol(backup.substr(0,backup.length()-1));        
+        tm* time = gmtime(&epochTime);
+        std::string humanDate = std::asctime(time);
+        label= Gtk::Label(humanDate);
+        Gtk::Button button = Gtk::Button(humanDate);
+        //button.signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,&BackupAppWindow::backupSelected),backup));
+
+        m_backups->append(label);
+    }
+    
+
+}
+
+void BackupAppWindow::populateFileTree(fs::path fileTreeLocation)
+{
+    std::string files = readFromFile(fileTreeLocation);
+    std::vector<std::string> fileVec = split(files, '\n');
+    Gtk::Label label = Gtk::Label("File tree: \nCurrent path: .");
+    m_fileTree->append(label);
+    std::string relativePath = fileVec.at(0);
+    fileVec.erase(fileVec.begin());
+    for(std::string file : fileVec){
+        //only show files currently in directory so ./abc but not ./1/abc:w
+        std::string text = "./" + file.substr(relativePath.size());
+        
+        label = Gtk::Label(text);
+        m_fileTree->append(label);
+    }
+}
+
+void BackupAppWindow::backupSelected(){
+    std::cout<<"backup selected: "<<std::endl;
+    std::cout<<m_backups->get_selected_row()<<std::endl;
 }

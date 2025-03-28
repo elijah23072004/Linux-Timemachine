@@ -67,21 +67,37 @@
                     </object>
                 </child>
                 <child>
-                <object class="GtkBox" id="last_backups">
-                    <property name="orientation">vertical</property>
-                    <child>
-                        <object class="GtkSearchBar" id="backupSearch">
+                    <object class="GtkBox" id="last_backups">
+                        <property name="orientation">vertical</property>
+                        <child>
+                            <object class="GtkSearchBar" id="backupSearch">
+                                <child>
+                                    <object class="GtkSearchEntry" id="backupSearchEntry">
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                        <child>
+                            <object class="GtkListBox" id="backupList">
+                            </object>
+                        </child>
+                        <layout>
+                            <property name="column">0</property>
+                            <property name="row">1</property>
+                        </layout>
+                    </object>
+                </child>
+                <child> 
+                        <object class="GtkBox" id="files">
                             <child>
-                                <object class="GtkSearchEntry" id="backupSearchEntry">
+                                <object class="GtkListBox" id="fileTree">
                                 </object>
                             </child>
+                            <layout>
+                                <property name="column">1</property>
+                                <property name="row">1</property>
+                            </layout>
                         </object>
-                    </child>
-                    <layout>
-                        <property name="column">0</property>
-                        <property name="row">1</property>
-                    </layout>
-                </object>
                 </child>
             </object>
         </child>

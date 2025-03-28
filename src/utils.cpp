@@ -56,6 +56,19 @@ void writeToFile(fs::path path, std::string text, bool append=false){
     of.close();
     return;    
 }
+
+std::string readFromFile(fs::path file){
+    std::ifstream myFile(file);
+    std::string data = "";
+    std::string line; 
+    while (getline(myFile, line)){
+        data+= line + "\n";
+    }
+    data=data.substr(0,data.size()-1); //remove trailing \n
+    return data;
+
+}
+
 //returns true if a folder with epochtime +'i' or +'f' exists 
 //takes fs::path path and long epochtime as arguments
 bool doesEpochBackupExists(fs::path path, long epochTime){
@@ -265,7 +278,8 @@ std::vector<fs::path> findRecentBackups(fs::path path){
 }
 
 std::string getFileTree(fs::path path){
-    std::string fileTree = "";
+    //start fileTree with relative path so can substr further elements if desired
+    std::string fileTree = path.string() + "\n";
     std::vector<fs::path> folderQueue;
     folderQueue.push_back(path);
     fs::path currentPath;
@@ -383,4 +397,10 @@ void compressBackupDirectory(fs::path backupLocation, fs::path backupMapFile, lo
     createParentFolderIfDoesntExist(backupMapFile);
     writeToFile(backupMapFile, backupMap);
 }
+
+
+
+
+
 #endif
+

@@ -2,6 +2,7 @@
 #define BACKUPAPPWINDOW_H_
 
 #include <gtkmm.h>
+#include <filesystem>
 
 class BackupAppWindow : public Gtk::ApplicationWindow
 {
@@ -17,7 +18,7 @@ public:
     void settingsClicked();
     void tutorialClicked();
     void quitClicked();
-
+    void backupSelected();
 protected:
     Glib::RefPtr<Gtk::Builder> m_refBuilder;
     Gtk::Button* m_log {nullptr};
@@ -31,6 +32,11 @@ protected:
     Gtk::SearchBar* m_searchbar {nullptr};
     Gtk::SearchEntry* m_searchentry {nullptr};
     Gtk::ListBox* m_backups {nullptr};
+    Gtk::ListBox* m_fileTree {nullptr};
+private:
+    void populateBackups(std::filesystem::path backupLocation);
+    void populateFileTree(std::filesystem::path fileTreeLocation);
+
 };
 
 #endif
