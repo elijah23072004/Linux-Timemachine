@@ -129,7 +129,8 @@ void BackupAppWindow::populateBackups(fs::path backupLocation){
         tm* time = gmtime(&epochTime);
         std::string humanDate = std::asctime(time);
         label= Gtk::Label(humanDate);
-        Gtk::Button button = Gtk::Button(humanDate);
+        label.set_name(backup);
+        //Gtk::Button button = Gtk::Button(humanDate);
         //button.signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,&BackupAppWindow::backupSelected),backup));
 
         m_backups->append(label);
@@ -158,4 +159,6 @@ void BackupAppWindow::populateFileTree(fs::path fileTreeLocation)
 void BackupAppWindow::backupSelected(){
     std::cout<<"backup selected: "<<std::endl;
     std::cout<<m_backups->get_selected_row()<<std::endl;
+    std::vector<Gtk::Widget*> selected = m_backups->get_selected_row()->get_children();
+    std::cout<<selected.at(0)->get_name()<<std::endl;
 }
