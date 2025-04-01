@@ -39,6 +39,7 @@ void BackupApplication::on_activate(){
         auto appwindow = create_appwindow();
 
         appwindow->present();
+        appwindow->setElementWidths();
     }
     catch (const Glib::Error& ex)
     {

@@ -19,7 +19,11 @@ public:
     void tutorialClicked();
     void quitClicked();
     void backupSelected();
+    void setElementWidths();
+
+
 protected:
+    void size_allocate_vfunc(int width, int height, int baseline) override;
     Glib::RefPtr<Gtk::Builder> m_refBuilder;
     Gtk::Button* m_log {nullptr};
     Gtk::Button* m_backup {nullptr};
@@ -31,11 +35,13 @@ protected:
     
     Gtk::SearchBar* m_searchbar {nullptr};
     Gtk::SearchEntry* m_searchentry {nullptr};
-    Gtk::ListBox* m_backups {nullptr};
+    Gtk::ListBox* m_backupList {nullptr};
     Gtk::ListBox* m_fileTree {nullptr};
 private:
     void populateBackups(std::filesystem::path backupLocation);
     void populateFileTree(std::filesystem::path fileTreeLocation);
+
+    std::filesystem::path outputDir;
 
 };
 

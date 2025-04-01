@@ -21,7 +21,9 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     auto menu = m_refBuilder->get_widget<Gtk::Grid>("menuButtons");
     if(!menu)
         throw std::runtime_error("No \"menuButtons\" object in mainWindow.ui");
-
+    auto backupGrid = m_refBuilder->get_widget<Gtk::Grid>("backupGrid");
+    if(!backupGrid)
+        throw std::runtime_error("No \"backupGrid\" object in mainWindow.ui");
     //Get windgets from the Gtk::Builder file
     m_log = m_refBuilder->get_widget<Gtk::Button>("log");
     if(!m_log)
@@ -59,8 +61,8 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     if(!m_searchbar)
         throw std::runtime_error("No \"backupSearch\" object in mainWindow.ui");
 
-    m_backups = m_refBuilder->get_widget<Gtk::ListBox>("backupList");
-    if(!m_backups)
+    m_backupList = m_refBuilder->get_widget<Gtk::ListBox>("backupList");
+    if(!m_backupList)
         throw std::runtime_error("No \"backups\" object in mainWindow.ui");
     m_fileTree = m_refBuilder->get_widget<Gtk::ListBox>("fileTree");
     if(!m_fileTree)
@@ -70,12 +72,15 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     //row->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,
     //  &ExampleAppWindow::on_find_word), row));
    
-    fs::path outputDir = "./test_data/output";
+    outputDir = "./test_data/output";
     populateBackups(outputDir);
 
     std::string tmp = readFromFile(outputDir/"backups.log");
-    std::string firstBackup = split(tmp,'\n').at(0);
-    populateFileTree(outputDir/"fileTrees"/firstBackup);
+    
+    std::vector<std::string> backups = split(tmp,'\n');
+    std::string lastBackup = backups.at(backups.size()-1);
+    populateFileTree(outputDir/"fileTrees"/lastBackup);
+
 }
 
 //static
@@ -94,6 +99,7 @@ void BackupAppWindow::quitClicked(){
 }
 
 void BackupAppWindow::logClicked(){
+    setElementWidths();
     std::cout<<"log"<<std::endl;
 }
 void BackupAppWindow::backupClicked(){
@@ -109,6 +115,7 @@ void BackupAppWindow::settingsClicked(){
     std::cout<<"settings"<<std::endl;
 }
 void BackupAppWindow::tutorialClicked(){
+    setElementWidths();
     std::cout<<"tutorial"<<std::endl;
 }
 
@@ -119,10 +126,10 @@ void BackupAppWindow::populateBackups(fs::path backupLocation){
     
     std::vector<std::string> backupVec = split(backups, '\n');
     Gtk::Label  label = Gtk::Label("Backups:");
-    m_backups->append(label);
+    m_backupList->append(label);
     Gtk::Button* select = new Gtk::Button("Select Backup");
     select->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,&BackupAppWindow::backupSelected)));
-    m_backups->append(*select);
+    m_backupList->append(*select);
     for(int i=backupVec.size()-1; i>=0; i--){
         std::string backup = backupVec.at(i);
         long epochTime = std::stol(backup.substr(0,backup.length()-1));        
@@ -133,7 +140,7 @@ void BackupAppWindow::populateBackups(fs::path backupLocation){
         //Gtk::Button button = Gtk::Button(humanDate);
         //button.signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,&BackupAppWindow::backupSelected),backup));
 
-        m_backups->append(label);
+        m_backupList->append(label);
     }
     
 
@@ -144,6 +151,11 @@ void BackupAppWindow::populateFileTree(fs::path fileTreeLocation)
     std::string files = readFromFile(fileTreeLocation);
     std::vector<std::string> fileVec = split(files, '\n');
     Gtk::Label label = Gtk::Label("File tree: \nCurrent path: .");
+    
+    for(auto element : m_fileTree->get_children()){
+        m_fileTree->remove(*element);
+    }
+
     m_fileTree->append(label);
     std::string relativePath = fileVec.at(0);
     fileVec.erase(fileVec.begin());
@@ -158,7 +170,47 @@ void BackupAppWindow::populateFileTree(fs::path fileTreeLocation)
 
 void BackupAppWindow::backupSelected(){
     std::cout<<"backup selected: "<<std::endl;
-    std::cout<<m_backups->get_selected_row()<<std::endl;
-    std::vector<Gtk::Widget*> selected = m_backups->get_selected_row()->get_children();
+    std::cout<<m_backupList->get_selected_row()<<std::endl;
+    std::vector<Gtk::Widget*> selected = m_backupList->get_selected_row()->get_children();
     std::cout<<selected.at(0)->get_name()<<std::endl;
+
+
+    populateFileTree(outputDir/"fileTrees"/std::string(selected.at(0)->get_name()));
 }
+
+void BackupAppWindow::setElementWidths(){
+    int windowWidth= 0;
+    //int windowHeight=0;
+    //this->get_default_size(windowWidth, windowHeight);
+    //std::cout<<windowWidth<<std::endl;
+    windowWidth = this->get_width();
+    int buttonWidth = windowWidth/5; 
+    //std::cout<<windowWidth<<std::endl;
+    //std::cout<<m_log->get_width()<<std::endl;
+    m_log->set_size_request(buttonWidth, -1);
+    m_backup->set_size_request(buttonWidth, -1);
+    m_restore->set_size_request(buttonWidth, -1);
+    m_edit->set_size_request(buttonWidth, -1);
+    m_tutorial->set_size_request(buttonWidth,-1);
+    /*std::cout<<buttonWidth<<std::endl;
+   
+    std::cout<<"log: " << m_log->get_width()<<std::endl;
+    
+    std::cout<<"backup: " << m_backup->get_width()<<std::endl;
+    
+    std::cout<<"restore: " << m_restore->get_width()<<std::endl;
+    
+    std::cout<<"edit: " << m_edit->get_width()<<std::endl;
+    
+    std::cout<<"tutorial: " << m_tutorial->get_width()<<std::endl;
+    */
+    m_backupList->set_size_request(windowWidth*0.33, -1);
+    m_fileTree->set_size_request(windowWidth*0.66,-1);
+
+}
+
+void BackupAppWindow::size_allocate_vfunc(int width, int height, int baseline){
+    Gtk::Widget::size_allocate_vfunc(width, height, baseline);
+    setElementWidths();
+}
+
