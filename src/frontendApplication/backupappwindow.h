@@ -24,6 +24,9 @@ public:
 
 protected:
     void size_allocate_vfunc(int width, int height, int baseline) override;
+    
+    void onSearchTextChanged();
+
     Glib::RefPtr<Gtk::Builder> m_refBuilder;
     Gtk::Button* m_log {nullptr};
     Gtk::Button* m_backup {nullptr};
@@ -32,11 +35,13 @@ protected:
     Gtk::Button* m_settings {nullptr};
     Gtk::Button* m_tutorial {nullptr};
     Gtk::Button* m_quit {nullptr};
-    
+    Gtk::Label* m_backupLabel {nullptr}; 
     Gtk::SearchBar* m_searchbar {nullptr};
     Gtk::SearchEntry* m_searchentry {nullptr};
     Gtk::ListBox* m_backupList {nullptr};
     Gtk::ListBox* m_fileTree {nullptr};
+
+    
 private:
     void populateBackups(std::filesystem::path backupLocation);
     void populateFileTree(std::filesystem::path fileTreeLocation);

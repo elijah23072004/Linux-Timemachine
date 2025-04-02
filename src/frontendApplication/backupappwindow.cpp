@@ -24,6 +24,10 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     auto backupGrid = m_refBuilder->get_widget<Gtk::Grid>("backupGrid");
     if(!backupGrid)
         throw std::runtime_error("No \"backupGrid\" object in mainWindow.ui");
+    auto lastBackupGrid = m_refBuilder->get_widget<Gtk::Box>("lastBackups");
+    if(!lastBackupGrid)
+        throw std::runtime_error("No \"lastBackups\" object in mainWindow.ui");
+
     //Get windgets from the Gtk::Builder file
     m_log = m_refBuilder->get_widget<Gtk::Button>("log");
     if(!m_log)
@@ -53,6 +57,11 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     if(!m_quit)
         throw std::runtime_error("No \"quit\" object in mainWindow.ui");
     m_quit->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &BackupAppWindow::quitClicked)));
+    
+    m_backupLabel = m_refBuilder->get_widget<Gtk::Label>("backupLabel");
+    if(!m_backupLabel)
+        throw std::runtime_error("No \"backupLabel\" object in mainWindow.ui");
+
     m_searchentry = m_refBuilder->get_widget<Gtk::SearchEntry>("backupSearchEntry");
     if(!m_searchentry)
         throw std::runtime_error("No \"backupSearchEntry\" object in window.ui");
@@ -68,6 +77,11 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     if(!m_fileTree)
         throw std::runtime_error("No \"fileTree\" object in mainWindow.ui");
 
+    m_searchbar->connect_entry(*m_searchentry);
+    m_searchbar->set_search_mode(true);
+
+    m_searchentry->signal_search_changed().connect(
+        sigc::mem_fun(*this, &BackupAppWindow::onSearchTextChanged));
     //need to set widths and locations of log,backup,restore,edit,tutorial buttons so fit top width of screen 
     //row->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,
     //  &ExampleAppWindow::on_find_word), row));
@@ -214,3 +228,7 @@ void BackupAppWindow::size_allocate_vfunc(int width, int height, int baseline){
     setElementWidths();
 }
 
+
+void BackupAppWindow::onSearchTextChanged(){
+    std::cout<<"search text changed"<<std::endl;
+}
