@@ -117,6 +117,7 @@ void BackupAppWindow::logClicked(){
     std::cout<<"log"<<std::endl;
 }
 void BackupAppWindow::backupClicked(){
+    std::cout<<system("linuxTimeMachineCLI")<<std::endl;
     std::cout<<"backup"<<std::endl;
 }
 void BackupAppWindow::restoreClicked(){
@@ -126,6 +127,10 @@ void BackupAppWindow::editClicked(){
     std::cout<<"edit"<<std::endl;
 }
 void BackupAppWindow::settingsClicked(){
+
+    setupConfigFile("/home/eli/Shared/CompSci/individualProject/projectCode/test_data/input", "/home/eli/Shared/CompSci/individualProject/projectCode/test_data/output");
+    setupSystemdTimer();
+
     std::cout<<"settings"<<std::endl;
 }
 void BackupAppWindow::tutorialClicked(){

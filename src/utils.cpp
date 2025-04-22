@@ -399,6 +399,61 @@ void compressBackupDirectory(fs::path backupLocation, fs::path backupMapFile, lo
 }
 
 
+void setupSystemdTimer(){
+    std::string homeDir = std::getenv("HOME");
+    std::string serviceLoc = homeDir + "/.config/systemd/user/LinuxTimeMachine.service";
+    std::string timerLoc = homeDir+ "/.config/systemd/user/LinuxTimeMachine.timer";
+    
+    std::string serviceStr = R""""(
+[Unit]
+Description=LinuxTimeMachine backup system
+
+[Service]
+ExecStart=/usr/local/bin/linuxTimeMachineCLI
+Type=simple
+
+
+[Install]
+WantedBy=default.target
+    )"""";
+
+    std::string timerStr = R""""(
+[Unit]
+Description=Schedule linuxTimeMachineCLI to be ran repeatedly 
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=timers.target
+    )"""";
+
+
+    writeToFile(serviceLoc, serviceStr);
+    writeToFile(timerLoc, timerStr);
+
+    system("systemctl --user daemon-reload");
+    system("systemctl --user start LinuxTimeMachine.timer");
+}
+
+void setupConfigFile(std::string inputLoc, std::string outputLoc, int schedule = 3600, int backupRatio = 50, bool compression=true){
+    std::string text = "[input]\n"
+            +inputLoc
+            +"\n[output]\n"
+            +outputLoc
+            +"\n[schedule]\n"
+            +std::to_string(schedule)
+            +"\n[backupRatio]\n"
+            +std::to_string(backupRatio)
+            +"\n[compression]\n";
+    if (compression)text+="true";
+    else text+="false";
+    std::string configLoc = std::string(std::getenv("HOME")) + "/.config/LinuxTimeMachine/config.conf";
+    createParentFolderIfDoesntExist(configLoc);
+    writeToFile(configLoc, text);
+}
+
 
 
 

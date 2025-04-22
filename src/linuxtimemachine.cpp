@@ -13,7 +13,7 @@ int parseConfigFile(std::string);
 int main(int argc, char **argv) {
 
     if(argc == 1) {
-        std::string defaultLocation = std::string(std::getenv("HOME")) + "/.config/linuxTimeMachine/config.conf";
+        std::string defaultLocation = std::string(std::getenv("HOME")) + "/.config/LinuxTimeMachine/config.conf";
         return parseConfigFile(defaultLocation);;
     }
     return handleInput(argc,argv);
@@ -32,7 +32,7 @@ int handleInput(int argc, char ** argv){
     std::string configLocation;
     if(strcmp(argv[1], "-c") == 0 ){
         if(argc==2){
-            configLocation = std::string(std::getenv("HOME")) + "/.config/linuxTimeMachine/config.conf";
+            configLocation = std::string(std::getenv("HOME")) + "/.config/LinuxTimeMachine/config.conf";
         }
         else{
             configLocation=argv[2];
