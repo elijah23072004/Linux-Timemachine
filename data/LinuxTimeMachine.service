@@ -1,0 +1,11 @@
+[Unit]
+Description=LinuxTimeMachine backup system
+
+[Service]
+ExecStart=/usr/local/bin/linuxTimeMachineCLI
+Type=simple
+
+
+[Install]
+WantedBy=default.target
+

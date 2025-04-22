@@ -1,0 +1,11 @@
+[Unit]
+Description=Schedule linuxTimeMachineCLI to be ran repeatedly 
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=timers.target
+
+
