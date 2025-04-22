@@ -1,5 +1,6 @@
 #!/bin/bash
 
+rm -r $build_dir
 
 build_dir="./build_dir"
 path_loc="/usr/local/bin/"
