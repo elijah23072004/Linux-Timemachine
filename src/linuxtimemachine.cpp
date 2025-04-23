@@ -13,17 +13,10 @@ int parseConfigFile(std::string);
 int main(int argc, char **argv) {
 
     if(argc == 1) {
-        std::string defaultLocation = std::string(std::getenv("HOME")) + "/.config/LinuxTimeMachine/config.conf";
+        std::string defaultLocation = std::string(std::getenv("HOME")) + "/.config/TimeMachine/config.conf";
         return parseConfigFile(defaultLocation);;
     }
     return handleInput(argc,argv);
-
-    std::cout << "This is project " << PROJECT_NAME << ".\n";
-    std::string backupMode = argv[3]; 
-
-    
-
-    return 0;
 }
 
 int handleInput(int argc, char ** argv){
@@ -112,7 +105,7 @@ int handleInput(int argc, char ** argv){
         else if (backupMode == 'r'){
             
             int numberPreviousBackups = findRecentBackups(outputLocation).size();
-            std::cout<<numberPreviousBackups<<std::endl;
+            std::cout<<numberPreviousBackups -1 << " backups done since last full backup" <<std::endl;
             if(numberPreviousBackups == 0 || numberPreviousBackups>=backupRatio){
                 std::cout<<fullBackup(inputLocation,outputLocation, compression)<<std::endl;
                 return 0;
@@ -233,8 +226,8 @@ int parseConfigFile(std::string fileLocation){
         //need to set systemd timer to be the frequency 
         //will need to be checked to see if timer is already set and right frequency
 
-        int numberPreviousBackups = findBackups(outputLocation).size();
-        std::cout<<numberPreviousBackups<<std::endl;
+        int numberPreviousBackups = findRecentBackups(outputLocation).size();
+        std::cout<<numberPreviousBackups -1 << " backups done since last full backup" <<std::endl;
         if(numberPreviousBackups == 0 || numberPreviousBackups>=backupRatio){
             std::cout<<fullBackup(inputLocation,outputLocation, compression)<<std::endl;
             return 0;

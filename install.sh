@@ -17,8 +17,8 @@ if ! test -w $path_loc; then
 
 fi 
 
-cp ${build_dir}/linuxTimeMachineBackend ${path_loc}linuxTimeMachineCLI
-cp ${build_dir}/linuxTimeMachineApp ${path_loc}linuxTimeMachine
+cp ${build_dir}/linuxTimeMachineBackend ${path_loc}timeMachineCLI
+cp ${build_dir}/linuxTimeMachineApp ${path_loc}timeMachine
 
 
 

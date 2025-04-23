@@ -1,5 +1,5 @@
 [Unit]
-Description=Schedule linuxTimeMachineCLI to be ran repeatedly 
+Description=Schedule TimeMachineCLI to be ran repeatedly 
 
 [Timer]
 OnBootSec=15min

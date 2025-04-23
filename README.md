@@ -1,7 +1,12 @@
 #Linux-Timemachine
 requirements:
 linux c++17 compiler
-linux operating sytem with diff command installed 
+linux operating sytem with diff and patch command installed 
+
+
+optional:
+systemd system for use of scheduling 
+
 
 
 TODO

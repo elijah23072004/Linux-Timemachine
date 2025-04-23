@@ -1,2 +1,2 @@
-systemctl --user stop LinuxTimeMachine.timer
+systemctl --user stop TimeMachine.timer
 

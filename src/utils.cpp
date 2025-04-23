@@ -273,10 +273,12 @@ fs::path recoverFilesRecursively(fs::path relativePath, std::vector<fs::path> ba
 
 std::vector<fs::path> findBackups(fs::path path){
     fs::path logPath = path/"backups.log";
+    std::vector<fs::path> backups;
     if(!doesPathExist(logPath)){
         throw std::invalid_argument("file: " + logPath.string() + " does not exist");
+        //if file is non existent return empty vec since no backups will have commenced 
+        //return backups;
     }
-    std::vector<fs::path> backups;
     std::ifstream f;
     f.open(logPath.c_str());
     std::string line;
@@ -366,7 +368,7 @@ std::string compressAndDeleteFiles(std::vector<fs::path> files){
         command += " " + file.filename().string();
 
     }
-    command += " >nul";
+    command += " >/dev/null";
     system(command.c_str());
 
     for(fs::path file : files){
@@ -447,15 +449,15 @@ void compressBackupDirectory(fs::path backupLocation, fs::path backupMapFile, lo
 
 void setupSystemdTimer(){
     std::string homeDir = std::getenv("HOME");
-    std::string serviceLoc = homeDir + "/.config/systemd/user/LinuxTimeMachine.service";
-    std::string timerLoc = homeDir+ "/.config/systemd/user/LinuxTimeMachine.timer";
+    std::string serviceLoc = homeDir + "/.config/systemd/user/TimeMachine.service";
+    std::string timerLoc = homeDir+ "/.config/systemd/user/TimeMachine.timer";
     
     std::string serviceStr = R""""(
 [Unit]
-Description=LinuxTimeMachine backup system
+Description=TimeMachine is a differential backup system
 
 [Service]
-ExecStart=/usr/local/bin/linuxTimeMachineCLI
+ExecStart=/usr/local/bin/timeMachineCLI
 Type=simple
 
 
@@ -465,7 +467,7 @@ WantedBy=default.target
 
     std::string timerStr = R""""(
 [Unit]
-Description=Schedule linuxTimeMachineCLI to be ran repeatedly 
+Description=Schedule timeMachineCLI to be ran repeatedly 
 
 [Timer]
 OnBootSec=15min
@@ -480,7 +482,7 @@ WantedBy=timers.target
     writeToFile(timerLoc, timerStr);
 
     system("systemctl --user daemon-reload");
-    system("systemctl --user start LinuxTimeMachine.timer");
+    system("systemctl --user start TimeMachine.timer");
 }
 
 void setupConfigFile(std::string inputLoc, std::string outputLoc, int schedule = 3600, int backupRatio = 50, bool compression=true){
@@ -495,7 +497,7 @@ void setupConfigFile(std::string inputLoc, std::string outputLoc, int schedule =
             +"\n[compression]\n";
     if (compression)text+="true";
     else text+="false";
-    std::string configLoc = std::string(std::getenv("HOME")) + "/.config/LinuxTimeMachine/config.conf";
+    std::string configLoc = std::string(std::getenv("HOME")) + "/.config/TimeMachine/config.conf";
     createParentFolderIfDoesntExist(configLoc);
     writeToFile(configLoc, text);
 }

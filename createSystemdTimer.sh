@@ -1,11 +1,11 @@
 timerLoc=~/.config/systemd/user/
 
-cp ./installer/data/LinuxTimeMachine.service ${timerLoc}LinuxTimeMachine.service
-cp ./installer/data/LinuxTimeMachine.timer ${timerLoc}LinuxTimeMachine.timer
+cp ./data/TimeMachine.service ${timerLoc}TimeMachine.service
+cp ./data/TimeMachine.timer ${timerLoc}TimeMachine.timer
 
 #echo $timerLoc
 
 
 systemctl --user daemon-reload
-systemctl --user start LinuxTimeMachine.timer
+systemctl --user start TimeMachine.timer
 

@@ -1,0 +1,11 @@
+[Unit]
+Description=TimeMachine a differential backup system
+
+[Service]
+ExecStart=/usr/local/bin/timeMachineCLI
+Type=simple
+
+
+[Install]
+WantedBy=default.target
+
