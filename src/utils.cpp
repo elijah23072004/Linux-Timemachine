@@ -122,12 +122,17 @@ std::vector<std::string> split(std::string str, char delimiter)
 //to be the full backup
 //returns a path to the recovered File 
 //which will be stored  in the output location passed in the outputLoc fs::path
-fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocations, fs::path outputLocation, fs::path backupFolder){
+fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocations, fs::path outputLocation, fs::path backupFolder, fs::path* filename = NULL){
     if(is_directory(backupLocations.at(0)/relativePath)){
         throw std::invalid_argument("recieved folder as a file to recover");
     }
     fs::path fileLocation = backupFolder / backupLocations.at(0) / relativePath;
-    outputLocation/=std::to_string(std::time(0));
+    if(filename){
+        outputLocation/=*filename;
+    }
+    else{
+        outputLocation/=std::to_string(std::time(0));
+    }
     createParentFolderIfDoesntExist(outputLocation);
     //std::cout<<backupFolder << " backupMaps " <<backupLocations.at(0).filename()<<std::endl; 
     if(doesPathExist(backupFolder / "backupMaps" / backupLocations.at(0).filename())){
@@ -150,7 +155,7 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                         //will override file if file with same name exists in directory however should always call this into tmp directory and shouldn't happen since file names 
                         //will have random numeric number
                         std::string command = "tar -zxvf " + (backupFolder / backupLocations.at(0) /  files.at(0)).string() 
-                            + " --directory="+outputLocation.parent_path().string() + " " + relativePath.filename().string() + " >nul";
+                            + " --directory="+outputLocation.parent_path().string() + " " + relativePath.filename().string() + " >/dev/null";
                         system(command.c_str());
                         fs::rename(outputLocation.parent_path() / relativePath.filename(), outputLocation);
                         found=true;
@@ -159,8 +164,6 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                 }
             }
         }
-        //std::cout<<"after while loop"<<std::endl;
-
     }
 
     else {
@@ -194,7 +197,7 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                             //so fix is to put it in a tar folder 
                             fs::create_directory(outputLocation.parent_path()/"tarFolder");
                             std::string command = "tar -zxvf " + (backupFolder / location /  files.at(0)).string() 
-                                + " --directory="+(outputLocation.parent_path()/"tarFolder").string() + " " + relativePath.filename().string() + " >nul";
+                                + " --directory="+(outputLocation.parent_path()/"tarFolder").string() + " " + relativePath.filename().string() + " >/dev/null";
                             system(command.c_str());
                             //gets put in relative path like 123/abc where currently just want /abc here 
                             //fix could be to put into compression just the abc part not the other sections
@@ -219,7 +222,7 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                 continue;
             }
         }
-        std::string command = "patch -Ns " + outputLocation.string() + " < " + diffLocation + " >nul";
+        std::string command = "patch -Ns " + outputLocation.string() + " < " + diffLocation + " >/dev/null";
         //std::cout<<command<<std::endl;
         system(command.c_str());
         fs::remove_all(outputLocation.parent_path()/"tarFolder");
@@ -227,9 +230,52 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
     return outputLocation;
 
 }
+//recover file in relativePath with all files inside directories recusively
+fs::path recoverFilesRecursively(fs::path relativePath, std::vector<fs::path> backupLocations, fs::path outputLocation, fs::path backupFolder){
+    std::cout<<"recover files recursively" <<std::endl;
+    //want to find all files in most recent backup to know which files to recover 
+    std::string fileTree = readFromFile(backupFolder/ "fileTrees" / backupLocations.at(backupLocations.size()-1));
+    std::vector<std::string> files = split(fileTree, '\n');
+    std::string basePath = files.at(0);
+    files.erase(files.begin());
+    std::vector<std::string> filesToRecover;
+    std::cout<<relativePath.string()<<std::endl;
+    for(std::string file: files){
+        //std::cout<<file<<std::endl;
+        file = file.substr(basePath.size());
+        if(file.at(0) == '/' ){
+            file = file.substr(1);
+        }
+        //std::cout<<file<<std::endl;
+        std::string::size_type index = file.find(relativePath.string(), 0);
+        //std::cout<<index<<std::endl;
+        if(index != 0){
+            continue;
+        }
+        filesToRecover.push_back(file);
+    }
+    for(std::string file: filesToRecover){
+        //finds path relative to the relativePath path, e.g. Documents/work/2.pdf and Documents/  outputs work/2.pdf 
+        std::cout<<file<<std::endl;
+        std::string relativeFilePath = file.substr(relativePath.parent_path().string().size());
+        if(relativeFilePath.at(0) == '/'){
+            relativeFilePath=relativeFilePath.substr(1);
+        }
+        std::cout<<relativeFilePath<<std::endl;
+        fs::path filePath = relativeFilePath;
+        fs::path fileName = filePath.filename();
+        recoverFile(file, backupLocations, outputLocation/filePath.parent_path(), backupFolder, &fileName);
+    }
+
+    return outputLocation;
+}
+
 
 std::vector<fs::path> findBackups(fs::path path){
     fs::path logPath = path/"backups.log";
+    if(!doesPathExist(logPath)){
+        throw std::invalid_argument("file: " + logPath.string() + " does not exist");
+    }
     std::vector<fs::path> backups;
     std::ifstream f;
     f.open(logPath.c_str());
@@ -257,7 +303,7 @@ std::vector<fs::path> findBackupRecoveryList(fs::path logLocation, fs::path last
             break;
         }
     }
-    if(found == false) {throw std::invalid_argument("backup not found in backups.log");}
+    if(found == false) {throw std::invalid_argument("backup " + lastBackup.string() + " not found in backups.log");}
     backups.assign(backups.begin()+lastFullBackup, backups.begin()+end+1);
 
     return backups;

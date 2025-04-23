@@ -39,6 +39,27 @@ int handleInput(int argc, char ** argv){
         }
         return parseConfigFile(configLocation);
     }
+    else if(strcmp(argv[1], "-r") ==0){
+        if(argc==6){
+            fs::path relativePath = fs::path(argv[2]);
+            fs::path outputLocation = argv[4];
+            fs::path backupFolderLocation= argv[3];
+            //relative path relative to backup folder location and the epoch time {i/f} folder after  
+            fs::path backup = argv[5];
+
+            std::cout<<relativePath.string()<<std::endl;
+            std::cout<<backupFolderLocation.string()<<std::endl;
+            std::cout<<outputLocation.string()<<std::endl;
+            std::vector<fs::path> backupLocations = findBackupRecoveryList(backupFolderLocation, backup);
+            std::cout << recoverFilesRecursively(relativePath, backupLocations, outputLocation, backupFolderLocation) <<std::endl;
+            return 0;
+            
+        }
+        else{
+            std::cout<<"please pass arguements for location of file to be recovered, backup folder location  and output location for recovered files and backupId "<<std::endl;
+            return 1;
+        }
+    }
     else{
         inputLocation = argv[1];
         outputLocation = argv[2];

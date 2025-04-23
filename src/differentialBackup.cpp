@@ -78,13 +78,6 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
     fs::path outputFolder = outputPath;
     outputPath.append(newFolderName);
     std::cout<<"output location: "<<outputPath.string()<<std::endl;
-    try{ 
-        if(!fs::create_directory(outputPath)) return 4;
-    }
-    catch (const std::filesystem::filesystem_error &ex){
-        return 4;
-            
-    }
     
     std::vector<fs::path> changedFiles = getAllChangedFiles(inputPath, lastBackupTime);
     
@@ -93,6 +86,13 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
     std::cout<<"number of changed files: "<<changedFiles.size()<<std::endl;
     if(changedFiles.size() == 0){
         return 0;
+    }
+    try{ 
+        if(!fs::create_directory(outputPath)) return 4;
+    }
+    catch (const std::filesystem::filesystem_error &ex){
+        return 4;
+
     }
     for(fs::path file : changedFiles){
         std::string relativePath = file.string().substr(inputPathLength);
