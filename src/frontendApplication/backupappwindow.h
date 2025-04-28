@@ -44,10 +44,10 @@ protected:
     
 private:
     void populateBackups(std::filesystem::path backupLocation);
-    void populateFileTree(std::filesystem::path fileTreeLocation);
-
+    void populateFileTree(std::filesystem::path fileTreeLocation, std::filesystem::path selectedPath);
+    void traversedFileTree(std::filesystem::path selectedPath, std::string fileName);
     std::filesystem::path outputDir;
-
+    std::filesystem::path currentSelectedBackup;
 };
 
 #endif
