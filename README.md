@@ -2,15 +2,16 @@
 requirements:
 linux c++17 compiler
 linux operating sytem with diff and patch command installed 
+Gtk4 installed on system 
 
+to install program
+run ./install.sh shell script with 
+super user permissions (e.g. sudo)
+in root application directory (directory with install.sh inside)
 
-optional:
-systemd system for use of scheduling 
+to run GUI program run command
+timeMachine
 
-
-
-TODO
-add functionality to decide whetehr to include files begging with a . 
-which usually are hidden files
-and other filters (like a max size file to backup or file extensions)
+to run CLI
+timeMachineCLI <arguments>
 
