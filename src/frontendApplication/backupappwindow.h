@@ -19,8 +19,8 @@ public:
     void quitClicked();
     void backupSelected();
     void setElementWidths();
-
-
+    void checkConfigFile();
+    void populateBackups(std::filesystem::path backupLocation);
 protected:
     void size_allocate_vfunc(int width, int height, int baseline) override;
     
@@ -40,7 +40,6 @@ protected:
 
     
 private:
-    void populateBackups(std::filesystem::path backupLocation);
     void populateFileTree(std::filesystem::path fileTreeLocation, std::filesystem::path selectedPath);
     void traversedFileTree(std::filesystem::path selectedPath, std::string fileName);
     void emptyFileTree();

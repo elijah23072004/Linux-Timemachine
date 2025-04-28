@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "backupapplication.h"
+#include "backupappwindow.h"
 
 namespace fs= std::filesystem;
 
@@ -18,6 +19,7 @@ public:
     void saveClicked();
     void cancelClicked();
     void setApplication(BackupApplication* app);
+    void setMainWindow(BackupAppWindow* window);
     void openFileDialog(bool inputDialog);
     void onSelect(Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> &dialog, bool inputDialog);
     std::filesystem::path backupLocation;
@@ -40,7 +42,7 @@ protected:
     Gtk::Button* m_save;
     Gtk::Label* m_errLabel;
     BackupApplication* app;
-
+    BackupAppWindow* mainWindow;
     std::string outputPath;
     std::string inputPath;
 };

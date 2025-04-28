@@ -123,7 +123,9 @@ SettingsAppWindow* SettingsAppWindow::create()
         throw std::runtime_error("No \"app_window\" in settings.ui");
     return window;
 }
-
+void SettingsAppWindow::setMainWindow(BackupAppWindow* window){
+    this->mainWindow=window;
+}
 void SettingsAppWindow::setApplication(BackupApplication* app){
     this->app = app;
 }
@@ -175,8 +177,8 @@ void SettingsAppWindow::saveClicked(){
     else{
         system("systemctl --user disable TimeMachine.timer");
     }
-
-
+    mainWindow->populateBackups(outputPath);
+    cancelClicked();
 }
 void SettingsAppWindow::cancelClicked()
 {

@@ -78,17 +78,9 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     //row->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,
     //  &ExampleAppWindow::on_find_word), row));
    
-    outputDir = "./test_data/output";
-    populateBackups(outputDir);
 
     emptyFileTree();
 
-    //std::string tmp = readFromFile(outputDir/"backups.log");
-    
-    //std::vector<std::string> backups = split(tmp,'\n');
-    //std::string lastBackup = backups.at(backups.size()-1);
-    //currentSelectedBackup = outputDir / "fileTrees"/lastBackup;
-    //populateFileTree(currentSelectedBackup, fs::path(""));
 
 }
 
@@ -97,11 +89,36 @@ BackupAppWindow* BackupAppWindow::create(BackupApplication* application)
 {
     auto refBuilder = Gtk::Builder::create_from_file("src/frontendApplication/mainWindow.ui");
     auto window = Gtk::Builder::get_widget_derived<BackupAppWindow>(refBuilder, "app_window");
-    window->setApplication(application);
     if (!window) 
         throw std::runtime_error("No \"app_window\" in mainWindow.ui");
+    window->setApplication(application);
+    window->checkConfigFile();
     return window;
 }   
+
+void BackupAppWindow::checkConfigFile(){
+    std::string homeDir = std::getenv("HOME");
+    fs::path configFile = homeDir + "/.config/TimeMachine/config.conf";
+
+    if(!fs::exists(configFile)){
+        app->createSettingsWindow(this);
+        return;
+    }
+
+
+    std::ifstream myfile(configFile.string());
+    std::string line;
+    while (std::getline(myfile,line)){
+        if(line == "[output]"){
+            std::getline(myfile,line);
+            outputDir=line;
+            break;
+        }
+    } 
+    populateBackups(outputDir);
+
+
+}
 
 void BackupAppWindow::setApplication(BackupApplication* application){
     this->app = application;
@@ -125,7 +142,7 @@ void BackupAppWindow::settingsClicked(){
 
     //setupConfigFile("/home/eli/Shared/CompSci/individualProject/projectCode/test_data/input", "/home/eli/Shared/CompSci/individualProject/projectCode/test_data/output");
     //setupSystemdTimer();
-    app->createSettingsWindow();
+    app->createSettingsWindow(this);
     std::cout<<"settings"<<std::endl;
 }
 void BackupAppWindow::tutorialClicked(){
@@ -144,6 +161,7 @@ void BackupAppWindow::populateBackups(fs::path backupLocation){
     std::string backups = readFromFile(backupLog);
     for(auto element : m_backupList->get_children()){
          m_backupList->remove(*element);
+        
     }
     std::vector<std::string> backupVec = split(backups, '\n');
     Gtk::Label  label = Gtk::Label("Backups:");
@@ -162,7 +180,7 @@ void BackupAppWindow::populateBackups(fs::path backupLocation){
         m_backupList->append(label);
     }
     
-
+    
 }
 
 void BackupAppWindow::emptyFileTree(){

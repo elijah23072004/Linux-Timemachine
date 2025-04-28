@@ -86,10 +86,13 @@ void BackupApplication::closeWindow(std::string title){
     }
 }
 
-void BackupApplication::createSettingsWindow(){
+void BackupApplication::createSettingsWindow(BackupAppWindow* mainWindow){
     auto window = SettingsAppWindow::create();
     add_window(*window);
     window->setApplication(this);
+    window->setMainWindow(mainWindow);
     window->present();
     window->get_focus();
+    
+
 }
