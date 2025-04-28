@@ -14,7 +14,8 @@ exe1 = executable('randomFileSystemGenerator', 'src/testing/randomFileSystemGene
 cpp_sources2 = [
   'src/frontendApplication/main.cpp',
   'src/frontendApplication/backupappwindow.cpp',
-  'src/frontendApplication/backupapplication.cpp']
+  'src/frontendApplication/backupapplication.cpp',
+  'src/frontendApplication/recoverappwindow.cpp']
 exe2 = executable('linuxTimeMachineApp', cpp_sources2,dependencies: gtkmm_dep)
 test('basic', exe)
 

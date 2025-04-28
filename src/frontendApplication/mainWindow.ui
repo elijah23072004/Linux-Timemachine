@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
     <object class="GtkApplicationWindow" id="app_window">
-        <property name="title" translatable="yes"> Time Machine</property>
+        <property name="title" translatable="yes">Time Machine</property>
         <property name="default-width">1920</property>
         <property name="default-height">1080</property>
         <property name="hide-on-close">True</property>

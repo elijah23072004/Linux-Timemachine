@@ -1,8 +1,11 @@
 #include "backupapplication.h"
 #include "backupappwindow.h"
-
+#include "recoverappwindow.h"
 #include <iostream>
 #include <exception>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 BackupApplication::BackupApplication()
 : Gtk::Application("com.backupApp.Application", Gio::Application::Flags::HANDLES_OPEN)
@@ -15,7 +18,7 @@ Glib::RefPtr<BackupApplication> BackupApplication::create()
 }
 
 BackupAppWindow* BackupApplication::create_appwindow(){
-    auto appwindow = BackupAppWindow::create();
+    auto appwindow = BackupAppWindow::create(this);
     //make sure that the application runs for as long as this window is still open
     add_window(*appwindow);
 
@@ -59,4 +62,25 @@ void BackupApplication::on_action_quit()
     auto windows = get_windows();
     for (auto window: windows) window->set_visible(false);
     quit();
+}
+
+void BackupApplication::createRecoverWindow(std::vector<std::string> files, fs::path outputPath){
+    auto window = RecoverAppWindow::create(files, outputPath);
+    window->setApplication(this);
+    add_window(*window);
+    this->recoverWindowID = window->get_id();
+    window->present();
+    window->get_focus();
+
+}
+
+void BackupApplication::closeWindow(std::string title){
+   auto windows = get_windows();
+    for(auto window: windows){
+        std::cout<<window->get_title()<<std::endl;
+        if(window->get_title() == title){
+            window->close();
+            return;
+        }
+    }
 }

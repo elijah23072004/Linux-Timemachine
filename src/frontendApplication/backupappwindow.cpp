@@ -89,28 +89,35 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     outputDir = "./test_data/output";
     populateBackups(outputDir);
 
-    std::string tmp = readFromFile(outputDir/"backups.log");
+    emptyFileTree();
+
+    //std::string tmp = readFromFile(outputDir/"backups.log");
     
-    std::vector<std::string> backups = split(tmp,'\n');
-    std::string lastBackup = backups.at(backups.size()-1);
-    currentSelectedBackup = outputDir / "fileTrees"/lastBackup;
-    populateFileTree(currentSelectedBackup, fs::path(""));
+    //std::vector<std::string> backups = split(tmp,'\n');
+    //std::string lastBackup = backups.at(backups.size()-1);
+    //currentSelectedBackup = outputDir / "fileTrees"/lastBackup;
+    //populateFileTree(currentSelectedBackup, fs::path(""));
 
 }
 
 //static
-BackupAppWindow* BackupAppWindow::create()
+BackupAppWindow* BackupAppWindow::create(BackupApplication* application)
 {
     auto refBuilder = Gtk::Builder::create_from_file("src/frontendApplication/mainWindow.ui");
     auto window = Gtk::Builder::get_widget_derived<BackupAppWindow>(refBuilder, "app_window");
+    window->setApplication(application);
     if (!window) 
         throw std::runtime_error("No \"app_window\" in mainWindow.ui");
     return window;
 }   
 
+void BackupAppWindow::setApplication(BackupApplication* application){
+    this->app = application;
+}
 
 void BackupAppWindow::quitClicked(){
     std::cout<<"quitting"<<std::endl;
+    app->closeWindow("Time Machine");
 }
 
 void BackupAppWindow::logClicked(){
@@ -169,6 +176,13 @@ void BackupAppWindow::populateBackups(fs::path backupLocation){
 
 }
 
+void BackupAppWindow::emptyFileTree(){
+    std::string text = "Please select a backup on the left section to allow for the files in the backup to be shown";
+    Gtk::Label label = Gtk::Label(text);
+    m_fileTree->append(label);
+}
+
+
 void BackupAppWindow::populateFileTree(fs::path fileTreeLocation, fs::path selectedPath)
 {
     std::cout<<fileTreeLocation<<std::endl;
@@ -188,6 +202,7 @@ void BackupAppWindow::populateFileTree(fs::path fileTreeLocation, fs::path selec
     m_fileTree->append(label);
     std::string relativePath = fileVec.at(0);
     fileVec.erase(fileVec.begin());
+
 
     std::vector<std::string> filteredFiles;
     for(std::string file : fileVec){
@@ -257,6 +272,23 @@ void BackupAppWindow::populateFileTree(fs::path fileTreeLocation, fs::path selec
             nonFolders.push_back(file);
         }
     }
+
+    std::vector<std::string> combined = folders; 
+    combined.insert(combined.end(), nonFolders.begin(), nonFolders.end());
+
+    Gtk::Button* button =new  Gtk::Button("Restore Files");
+    fs::path backupLocation =fileTreeLocation.parent_path().parent_path() / backupName; 
+    for(unsigned int i=0; i<combined.size();i++){
+        combined.at(i) = (selectedPath/combined.at(i)).string();
+    }
+    //get rid of ../ entry
+    if(combined.at(0) == "../"){
+        combined.erase(combined.begin());
+    }
+    button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &BackupAppWindow::restoreFiles),combined, backupLocation ));
+    m_fileTree->append(*button);
+
+
     for(std::string filename : folders){
         Gtk::Button* button = new Gtk::Button(filename);
         button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &BackupAppWindow::traversedFileTree),selectedPath.string(), filename ));
@@ -271,6 +303,7 @@ void BackupAppWindow::populateFileTree(fs::path fileTreeLocation, fs::path selec
 void BackupAppWindow::backupSelected(){
     std::cout<<"backup selected: "<<std::endl;
     std::cout<<m_backupList->get_selected_row()<<std::endl;
+    if(m_backupList->get_selected_row() == 0){return;}
     std::vector<Gtk::Widget*> selected = m_backupList->get_selected_row()->get_children();
     std::cout<<selected.at(0)->get_name()<<std::endl;
 
@@ -281,30 +314,13 @@ void BackupAppWindow::backupSelected(){
 
 void BackupAppWindow::setElementWidths(){
     int windowWidth= 0;
-    //int windowHeight=0;
-    //this->get_default_size(windowWidth, windowHeight);
-    //std::cout<<windowWidth<<std::endl;
     windowWidth = this->get_width();
     int buttonWidth = windowWidth/5; 
-    //std::cout<<windowWidth<<std::endl;
-    //std::cout<<m_log->get_width()<<std::endl;
     m_log->set_size_request(buttonWidth, -1);
     m_backup->set_size_request(buttonWidth, -1);
     m_restore->set_size_request(buttonWidth, -1);
     m_edit->set_size_request(buttonWidth, -1);
     m_tutorial->set_size_request(buttonWidth,-1);
-    /*std::cout<<buttonWidth<<std::endl;
-   
-    std::cout<<"log: " << m_log->get_width()<<std::endl;
-    
-    std::cout<<"backup: " << m_backup->get_width()<<std::endl;
-    
-    std::cout<<"restore: " << m_restore->get_width()<<std::endl;
-    
-    std::cout<<"edit: " << m_edit->get_width()<<std::endl;
-    
-    std::cout<<"tutorial: " << m_tutorial->get_width()<<std::endl;
-    */
     m_backupList->set_size_request(windowWidth*0.33, -1);
     m_fileTree->set_size_request(windowWidth*0.66,-1);
 
@@ -341,5 +357,12 @@ void BackupAppWindow::traversedFileTree(fs::path selectedPath, std::string fileN
         selectedPath = selectedPath / fileName;
     }
     populateFileTree(currentSelectedBackup, selectedPath);
+}
+
+void BackupAppWindow::restoreFiles(std::vector<std::string> files, std::filesystem::path backupLocation){
+    std::cout<<backupLocation.string()<<std::endl;
+    //show window allowing for selection of files to recover 
+    app->createRecoverWindow(files, backupLocation);
+    
 }
 

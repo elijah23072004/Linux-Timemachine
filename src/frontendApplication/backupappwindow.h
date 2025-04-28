@@ -3,14 +3,15 @@
 
 #include <gtkmm.h>
 #include <filesystem>
+#include "backupapplication.h"
 
 class BackupAppWindow : public Gtk::ApplicationWindow
 {
 public:
     BackupAppWindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refBuilder);
     
-    static BackupAppWindow* create();
-    
+    static BackupAppWindow* create(BackupApplication* application);
+    void setApplication(BackupApplication* application); 
     void logClicked();
     void backupClicked();
     void restoreClicked();
@@ -46,8 +47,11 @@ private:
     void populateBackups(std::filesystem::path backupLocation);
     void populateFileTree(std::filesystem::path fileTreeLocation, std::filesystem::path selectedPath);
     void traversedFileTree(std::filesystem::path selectedPath, std::string fileName);
+    void emptyFileTree();
+    void restoreFiles(std::vector<std::string> selectedPath, std::filesystem::path backupLocation);
     std::filesystem::path outputDir;
     std::filesystem::path currentSelectedBackup;
+    BackupApplication* app;
 };
 
 #endif
