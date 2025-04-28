@@ -29,10 +29,6 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
         throw std::runtime_error("No \"lastBackups\" object in mainWindow.ui");
 
     //Get windgets from the Gtk::Builder file
-    m_log = m_refBuilder->get_widget<Gtk::Button>("log");
-    if(!m_log)
-        throw std::runtime_error("No \"log\" object in mainWindow.ui");
-    m_log->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &BackupAppWindow::logClicked)));
     m_backup = m_refBuilder->get_widget<Gtk::Button>("backup");
     if(!m_backup)
         throw std::runtime_error("No \"backup\" object in mainWindow.ui");
@@ -129,10 +125,6 @@ void BackupAppWindow::quitClicked(){
     app->closeWindow("Time Machine");
 }
 
-void BackupAppWindow::logClicked(){
-    setElementWidths();
-    std::cout<<"log"<<std::endl;
-}
 void BackupAppWindow::backupClicked(){
     std::cout<<system("timeMachineCLI")<<std::endl;
     populateBackups(outputDir);
@@ -322,8 +314,7 @@ void BackupAppWindow::backupSelected(){
 void BackupAppWindow::setElementWidths(){
     int windowWidth= 0;
     windowWidth = this->get_width();
-    int buttonWidth = windowWidth/4; 
-    m_log->set_size_request(buttonWidth, -1);
+    int buttonWidth = windowWidth/3; 
     m_backup->set_size_request(buttonWidth, -1);
     m_settings->set_size_request(buttonWidth, -1);
     m_tutorial->set_size_request(buttonWidth,-1);

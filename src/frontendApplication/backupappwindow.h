@@ -12,7 +12,6 @@ public:
     
     static BackupAppWindow* create(BackupApplication* application);
     void setApplication(BackupApplication* application); 
-    void logClicked();
     void backupClicked();
     void settingsClicked();
     void tutorialClicked();
@@ -27,7 +26,6 @@ protected:
     void onSearchTextChanged();
 
     Glib::RefPtr<Gtk::Builder> m_refBuilder;
-    Gtk::Button* m_log {nullptr};
     Gtk::Button* m_backup {nullptr};
     Gtk::Button* m_settings {nullptr};
     Gtk::Button* m_tutorial {nullptr};

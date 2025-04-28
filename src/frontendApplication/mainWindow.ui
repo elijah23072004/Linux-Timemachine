@@ -20,19 +20,10 @@
                 <child>
                     <object class="GtkGrid" id="menuButtons">
                         <child>
-                            <object class="GtkButton" id="log">
-                                <property name="label">Log</property>
-                                <layout>
-                                    <property name="column">0</property>
-                                    <property name="row">0</property>
-                                </layout>
-                            </object>
-                        </child>
-                        <child>
                             <object class="GtkButton" id="backup">
                                 <property name="label">Backup</property>
                                 <layout>
-                                    <property name="column">1</property>
+                                    <property name="column">0</property>
                                     <property name="row">0</property>
                                 </layout>
                             </object>
@@ -41,7 +32,7 @@
                             <object class="GtkButton" id="settings">
                                 <property name="label">Settings</property>
                                 <layout>
-                                    <property name="column">2</property>
+                                    <property name="column">1</property>
                                     <property name="row">0</property>
                                 </layout>
                             </object>
@@ -50,7 +41,7 @@
                             <object class="GtkButton" id="tutorial">
                                 <property name="label">Tutorial</property>
                                 <layout>
-                                    <property name="column">3</property>
+                                    <property name="column">2</property>
                                     <property name="row">0</property>
                                 </layout>
                             </object>
