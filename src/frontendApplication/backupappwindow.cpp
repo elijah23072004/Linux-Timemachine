@@ -83,7 +83,7 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
 //static
 BackupAppWindow* BackupAppWindow::create(BackupApplication* application)
 {
-    auto refBuilder = Gtk::Builder::create_from_file("src/frontendApplication/mainWindow.ui");
+    auto refBuilder = Gtk::Builder::create_from_file("/usr/lib/TimeMachine/mainWindow.ui");
     auto window = Gtk::Builder::get_widget_derived<BackupAppWindow>(refBuilder, "app_window");
     if (!window) 
         throw std::runtime_error("No \"app_window\" in mainWindow.ui");

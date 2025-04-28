@@ -62,7 +62,7 @@ RecoverAppWindow::RecoverAppWindow(BaseObjectType* cobject, const Glib::RefPtr<G
 
 RecoverAppWindow* RecoverAppWindow::create(std::vector<std::string> files, fs::path backupLocation)
 {
-    auto refBuilder = Gtk::Builder::create_from_file("src/frontendApplication/recover.ui");
+    auto refBuilder = Gtk::Builder::create_from_file("/usr/lib/TimeMachine/recover.ui");
     auto window = Gtk::Builder::get_widget_derived<RecoverAppWindow>(refBuilder, "app_window");
     if (!window) 
         throw std::runtime_error("No \"app_window\" in recover.ui");

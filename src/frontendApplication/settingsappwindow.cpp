@@ -117,7 +117,7 @@ void SettingsAppWindow::autoFillInputs(){
 
 SettingsAppWindow* SettingsAppWindow::create()
 {
-    auto refBuilder = Gtk::Builder::create_from_file("src/frontendApplication/settings.ui");
+    auto refBuilder = Gtk::Builder::create_from_file("/usr/lib/TimeMachine/settings.ui");
     auto window = Gtk::Builder::get_widget_derived<SettingsAppWindow>(refBuilder, "app_window");
     if (!window) 
         throw std::runtime_error("No \"app_window\" in settings.ui");
