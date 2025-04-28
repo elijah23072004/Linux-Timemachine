@@ -15,6 +15,7 @@ protected:
 public:
     static Glib::RefPtr<BackupApplication> create();
     void createRecoverWindow(std::vector<std::string> files, std::filesystem::path outputPath);
+    void createSettingsWindow();
     void closeWindow(std::string title);
 protected: 
     BackupAppWindow* create_appwindow();

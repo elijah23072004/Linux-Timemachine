@@ -14,8 +14,6 @@ public:
     void setApplication(BackupApplication* application); 
     void logClicked();
     void backupClicked();
-    void restoreClicked();
-    void editClicked();
     void settingsClicked();
     void tutorialClicked();
     void quitClicked();
@@ -31,8 +29,6 @@ protected:
     Glib::RefPtr<Gtk::Builder> m_refBuilder;
     Gtk::Button* m_log {nullptr};
     Gtk::Button* m_backup {nullptr};
-    Gtk::Button* m_restore {nullptr};
-    Gtk::Button* m_edit {nullptr};
     Gtk::Button* m_settings {nullptr};
     Gtk::Button* m_tutorial {nullptr};
     Gtk::Button* m_quit {nullptr};
@@ -49,6 +45,7 @@ private:
     void traversedFileTree(std::filesystem::path selectedPath, std::string fileName);
     void emptyFileTree();
     void restoreFiles(std::vector<std::string> selectedPath, std::filesystem::path backupLocation);
+    void autoFillInputs();
     std::filesystem::path outputDir;
     std::filesystem::path currentSelectedBackup;
     BackupApplication* app;

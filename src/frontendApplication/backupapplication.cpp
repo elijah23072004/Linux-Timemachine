@@ -1,6 +1,7 @@
 #include "backupapplication.h"
 #include "backupappwindow.h"
 #include "recoverappwindow.h"
+#include "settingsappwindow.h"
 #include <iostream>
 #include <exception>
 #include <filesystem>
@@ -83,4 +84,12 @@ void BackupApplication::closeWindow(std::string title){
             return;
         }
     }
+}
+
+void BackupApplication::createSettingsWindow(){
+    auto window = SettingsAppWindow::create();
+    add_window(*window);
+    window->setApplication(this);
+    window->present();
+    window->get_focus();
 }

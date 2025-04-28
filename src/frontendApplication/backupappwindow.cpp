@@ -37,17 +37,9 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     if(!m_backup)
         throw std::runtime_error("No \"backup\" object in mainWindow.ui");
     m_backup->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &BackupAppWindow::backupClicked)));
-    m_restore = m_refBuilder->get_widget<Gtk::Button>("restore");
-    if(!m_restore)
-        throw std::runtime_error("No \"restore\" object in mainWindow.ui");
-    m_restore->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &BackupAppWindow::restoreClicked)));
-    m_edit = m_refBuilder->get_widget<Gtk::Button>("edit");
-    if(!m_edit)
-        throw std::runtime_error("No \"edit\" object in mainWindow.ui");
-    m_edit->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &BackupAppWindow::editClicked)));
     m_settings = m_refBuilder->get_widget<Gtk::Button>("settings");
     if(!m_settings)
-        throw std::runtime_error("No \"settings\" object in mainWindow.ui");
+        throw std::runtime_error("No \"edit\" object in mainWindow.ui");
     m_settings->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &BackupAppWindow::settingsClicked)));
     m_tutorial = m_refBuilder->get_widget<Gtk::Button>("tutorial");
     if(!m_tutorial)
@@ -125,20 +117,15 @@ void BackupAppWindow::logClicked(){
     std::cout<<"log"<<std::endl;
 }
 void BackupAppWindow::backupClicked(){
-    std::cout<<system("linuxTimeMachineCLI")<<std::endl;
+    std::cout<<system("timeMachineCLI")<<std::endl;
+    populateBackups(outputDir);
     std::cout<<"backup"<<std::endl;
-}
-void BackupAppWindow::restoreClicked(){
-    std::cout<<"restore"<<std::endl;
-}
-void BackupAppWindow::editClicked(){
-    std::cout<<"edit"<<std::endl;
 }
 void BackupAppWindow::settingsClicked(){
 
-    setupConfigFile("/home/eli/Shared/CompSci/individualProject/projectCode/test_data/input", "/home/eli/Shared/CompSci/individualProject/projectCode/test_data/output");
-    setupSystemdTimer();
-
+    //setupConfigFile("/home/eli/Shared/CompSci/individualProject/projectCode/test_data/input", "/home/eli/Shared/CompSci/individualProject/projectCode/test_data/output");
+    //setupSystemdTimer();
+    app->createSettingsWindow();
     std::cout<<"settings"<<std::endl;
 }
 void BackupAppWindow::tutorialClicked(){
@@ -155,7 +142,9 @@ std::string convertEpochToDate(long epochTime){
 void BackupAppWindow::populateBackups(fs::path backupLocation){
     fs::path backupLog = backupLocation / "backups.log";
     std::string backups = readFromFile(backupLog);
-    
+    for(auto element : m_backupList->get_children()){
+         m_backupList->remove(*element);
+    }
     std::vector<std::string> backupVec = split(backups, '\n');
     Gtk::Label  label = Gtk::Label("Backups:");
     m_backupList->append(label);
@@ -315,11 +304,10 @@ void BackupAppWindow::backupSelected(){
 void BackupAppWindow::setElementWidths(){
     int windowWidth= 0;
     windowWidth = this->get_width();
-    int buttonWidth = windowWidth/5; 
+    int buttonWidth = windowWidth/4; 
     m_log->set_size_request(buttonWidth, -1);
     m_backup->set_size_request(buttonWidth, -1);
-    m_restore->set_size_request(buttonWidth, -1);
-    m_edit->set_size_request(buttonWidth, -1);
+    m_settings->set_size_request(buttonWidth, -1);
     m_tutorial->set_size_request(buttonWidth,-1);
     m_backupList->set_size_request(windowWidth*0.33, -1);
     m_fileTree->set_size_request(windowWidth*0.66,-1);

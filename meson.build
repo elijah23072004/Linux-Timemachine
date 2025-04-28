@@ -15,7 +15,8 @@ cpp_sources2 = [
   'src/frontendApplication/main.cpp',
   'src/frontendApplication/backupappwindow.cpp',
   'src/frontendApplication/backupapplication.cpp',
-  'src/frontendApplication/recoverappwindow.cpp']
+  'src/frontendApplication/recoverappwindow.cpp',
+  'src/frontendApplication/settingsappwindow.cpp']
 exe2 = executable('linuxTimeMachineApp', cpp_sources2,dependencies: gtkmm_dep)
 test('basic', exe)
 
