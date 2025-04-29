@@ -17,7 +17,7 @@ bool isFileModifiedAfterTime(fs::path file, long time){
     
 }
 
-std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime){
+std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime, bool includeHiddenFiles=false){
 
     std::vector<fs::path> changedFiles;
     std::vector<fs::path> folderQueue;
@@ -28,6 +28,11 @@ std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime){
         current_path=folderQueue.at(0);
         folderQueue.erase(folderQueue.begin());
         for (const auto & entry : fs::directory_iterator(current_path)){
+            //if includeHiddenFiles is false and relative path starts with . then a hidden file and skip
+            std::string fileName = entry.path().filename();
+            if(!includeHiddenFiles && fileName[0] == '.'){
+                continue;
+            }
             if(isFileModifiedAfterTime(entry,prevTime)){
                 changedFiles.push_back(entry);
             }
@@ -60,7 +65,7 @@ int calcualteAndStoreDiffFile(fs::path inputFile, fs::path oldFile, fs::path des
 //3 if folder with same epoch time already exist 
 //4 if invalid permissions for either inputPath or outputPath 
 //5 if no previous fullBackup exists
-int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression=false){
+int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression=false, bool includeHiddenFiles=false){
     if(!(isDirectory(inputPath) && isDirectory(outputPath))) return 2;
     long epochTime = std::time(0);
     if(doesEpochBackupExists(outputPath, epochTime)) return 3;
@@ -79,7 +84,7 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
     outputPath.append(newFolderName);
     std::cout<<"output location: "<<outputPath.string()<<std::endl;
     
-    std::vector<fs::path> changedFiles = getAllChangedFiles(inputPath, lastBackupTime);
+    std::vector<fs::path> changedFiles = getAllChangedFiles(inputPath, lastBackupTime, includeHiddenFiles);
     
     //temparily just store full files (incremental backup) 
     int inputPathLength = inputPath.string().size();
@@ -97,6 +102,7 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
     for(fs::path file : changedFiles){
         std::string relativePath = file.string().substr(inputPathLength);
         if(relativePath[0] == '/'){relativePath=relativePath.substr(1);}
+
         //not recursive by default when no copy options 
         
         //check parent folder exists since if parent folder doesnt exist file will not be created
@@ -122,7 +128,7 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
         long compressionSize = 32768;
         compressBackupDirectory(outputPath, outputPath.parent_path() / "backupMaps"/newFolderName, compressionSize);
     }
-    saveFileTree(inputPath, fileTreeDestination);
+    saveFileTree(inputPath, fileTreeDestination, includeHiddenFiles);
     logBackup(newFolderName, outputFolder);
     return 0;
 }

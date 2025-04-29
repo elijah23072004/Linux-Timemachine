@@ -58,7 +58,10 @@ SettingsAppWindow::SettingsAppWindow(BaseObjectType* cobject, const Glib::RefPtr
     m_backupRatio = m_refBuilder->get_widget<Gtk::Text>("backupRatio");
     if(!m_backupRatio)
         throw std::runtime_error("No \"backupratio\" object in settings.ui");
-
+    m_hidden = m_refBuilder->get_widget<Gtk::CheckButton>("includeHidden");
+    if(!m_hidden)
+        throw std::runtime_error("No \"includeHidden\" object in settings.ui");
+    m_hidden->set_active(false);
     m_cancel = m_refBuilder->get_widget<Gtk::Button>("cancel");
     if(!m_cancel)
         throw std::runtime_error("No \"restore\" object in settings.ui");
@@ -109,6 +112,11 @@ void SettingsAppWindow::autoFillInputs(){
         else if(line =="[schedule]"){
             std::getline(myfile,line);
             m_schedule->set_active(true);
+        }
+        else if(line =="[includeHiddenFiles]"){
+            std::getline(myfile,line);
+            bool incl = line=="true";
+            m_hidden->set_active(incl);
         }
     }
     
@@ -169,6 +177,12 @@ void SettingsAppWindow::saveClicked(){
     }
     else{
         text+="\n[compression]\nfalse";
+    }
+    if(m_hidden->get_active()){
+        text+="\n[includeHiddenFiles]\ntrue";
+    }
+    else{
+        text+="\n[includeHiddenFiles]\nfalse";
     }
     fs::path configFolder = std::string(std::getenv("HOME")) + "/.config/TimeMachine";
     fs::create_directory(configFolder); 

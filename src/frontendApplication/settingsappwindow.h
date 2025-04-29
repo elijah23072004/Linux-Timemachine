@@ -38,6 +38,7 @@ protected:
     Gtk::CheckButton* m_schedule;
     Gtk::Label* m_advanced;
     Gtk::Text* m_backupRatio;
+    Gtk::CheckButton* m_hidden;
     Gtk::Button* m_cancel;
     Gtk::Button* m_save;
     Gtk::Label* m_errLabel;

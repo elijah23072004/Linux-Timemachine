@@ -325,7 +325,7 @@ std::vector<fs::path> findRecentBackups(fs::path path){
     return backups;
 }
 
-std::string getFileTree(fs::path path){
+std::string getFileTree(fs::path path, bool includeHiddenFiles=false){
     //start fileTree with relative path so can substr further elements if desired
     std::string fileTree = path.string() + "\n";
     std::vector<fs::path> folderQueue;
@@ -335,6 +335,9 @@ std::string getFileTree(fs::path path){
         currentPath = folderQueue.at(0);
         folderQueue.erase(folderQueue.begin());
         for(const  fs::path & entry : fs::directory_iterator(currentPath)){
+            if(!includeHiddenFiles && entry.filename().string()[0] == '.'){
+                continue;
+            }
             fileTree += entry.string() + "\n";
             if(is_directory(entry)){
                 folderQueue.push_back(entry);
@@ -349,9 +352,9 @@ std::string getFileTree(fs::path path){
 }
 //takes inputPAth as argumetn which is location where file tree should be made of 
 //and destination as arguement which is the full path of where to save file tree
-void saveFileTree(fs::path inputPath, fs::path destination){
+void saveFileTree(fs::path inputPath, fs::path destination, bool includeHiddenFiles=false){
     //creates folder to store destination if doesn't exist
-    std::string tree = getFileTree(inputPath);
+    std::string tree = getFileTree(inputPath, includeHiddenFiles);
     createParentFolderIfDoesntExist(destination);
     writeToFile(destination, tree);
 }

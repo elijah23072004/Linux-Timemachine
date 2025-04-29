@@ -132,6 +132,7 @@ int parseConfigFile(std::string fileLocation){
     std::string outputLocation="";
     std::string backupMode="";
     bool compression = false;
+    bool includeHiddenFiles=false;
     bool schedule;
     //how many x differential backups till a full backup should be done 
     int backupRatio = 0;
@@ -214,6 +215,20 @@ int parseConfigFile(std::string fileLocation){
                 throw std::invalid_argument("compression must be either true or false");
             }
         }
+        else if(text =="[includeHiddenFiles]"){
+            getline(myFile,text);
+            text = trimWhitespace(text);
+            if(text == "true"){
+                includeHiddenFiles=true;
+            }
+            else if(text=="false"){
+
+                includeHiddenFiles=false;    
+            }
+            else{
+                throw std::invalid_argument("include hidden files must be either true of false");
+            }
+        }
     }
     if(inputLocation.empty() || outputLocation.empty() || (backupMode.empty() && !schedule )) {
         std::cout<<"field empty in "<<std::endl;
@@ -229,11 +244,11 @@ int parseConfigFile(std::string fileLocation){
         int numberPreviousBackups = findRecentBackups(outputLocation).size();
         std::cout<<numberPreviousBackups -1 << " backups done since last full backup" <<std::endl;
         if(numberPreviousBackups == 0 || numberPreviousBackups>=backupRatio){
-            std::cout<<fullBackup(inputLocation,outputLocation, compression)<<std::endl;
+            std::cout<<fullBackup(inputLocation,outputLocation, compression, includeHiddenFiles)<<std::endl;
             return 0;
         }
         else{
-            std::cout<<differentialBackup(inputLocation,outputLocation, compression)<<std::endl;
+            std::cout<<differentialBackup(inputLocation,outputLocation, compression, includeHiddenFiles)<<std::endl;
             return 0;
         }
     }
