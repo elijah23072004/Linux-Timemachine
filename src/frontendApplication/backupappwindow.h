@@ -23,7 +23,7 @@ public:
 protected:
     void size_allocate_vfunc(int width, int height, int baseline) override;
     
-    void onSearchTextChanged();
+    //void onSearchTextChanged();
 
     Glib::RefPtr<Gtk::Builder> m_refBuilder;
     Gtk::Button* m_backup {nullptr};
@@ -31,8 +31,8 @@ protected:
     Gtk::Button* m_tutorial {nullptr};
     Gtk::Button* m_quit {nullptr};
     Gtk::Label* m_backupLabel {nullptr}; 
-    Gtk::SearchBar* m_searchbar {nullptr};
-    Gtk::SearchEntry* m_searchentry {nullptr};
+    //Gtk::SearchBar* m_searchbar {nullptr};
+   // Gtk::SearchEntry* m_searchentry {nullptr};
     Gtk::ListBox* m_backupList {nullptr};
     Gtk::ListBox* m_fileTree {nullptr};
 
@@ -43,6 +43,7 @@ private:
     void emptyFileTree();
     void restoreFiles(std::vector<std::string> selectedPath, std::filesystem::path backupLocation);
     void autoFillInputs();
+    Gtk::Popover* createPopOver(Gtk::Widget& parent, std::string text, Gdk::Rectangle pos);
     std::filesystem::path outputDir;
     std::filesystem::path currentSelectedBackup;
     BackupApplication* app;

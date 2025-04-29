@@ -50,13 +50,13 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     if(!m_backupLabel)
         throw std::runtime_error("No \"backupLabel\" object in mainWindow.ui");
 
-    m_searchentry = m_refBuilder->get_widget<Gtk::SearchEntry>("backupSearchEntry");
-    if(!m_searchentry)
-        throw std::runtime_error("No \"backupSearchEntry\" object in window.ui");
+    //m_searchentry = m_refBuilder->get_widget<Gtk::SearchEntry>("backupSearchEntry");
+    //if(!m_searchentry)
+    //    throw std::runtime_error("No \"backupSearchEntry\" object in window.ui");
 
-    m_searchbar = m_refBuilder->get_widget<Gtk::SearchBar>("backupSearch");
-    if(!m_searchbar)
-        throw std::runtime_error("No \"backupSearch\" object in mainWindow.ui");
+   // m_searchbar = m_refBuilder->get_widget<Gtk::SearchBar>("backupSearch");
+   // if(!m_searchbar)
+   //     throw std::runtime_error("No \"backupSearch\" object in mainWindow.ui");
 
     m_backupList = m_refBuilder->get_widget<Gtk::ListBox>("backupList");
     if(!m_backupList)
@@ -65,11 +65,11 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     if(!m_fileTree)
         throw std::runtime_error("No \"fileTree\" object in mainWindow.ui");
 
-    m_searchbar->connect_entry(*m_searchentry);
-    m_searchbar->set_search_mode(true);
+    //m_searchbar->connect_entry(*m_searchentry);
+    //m_searchbar->set_search_mode(true);
 
-    m_searchentry->signal_search_changed().connect(
-        sigc::mem_fun(*this, &BackupAppWindow::onSearchTextChanged));
+  //  m_searchentry->signal_search_changed().connect(
+  //      sigc::mem_fun(*this, &BackupAppWindow::onSearchTextChanged));
     //need to set widths and locations of log,backup,restore,edit,tutorial buttons so fit top width of screen 
     //row->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,
     //  &ExampleAppWindow::on_find_word), row));
@@ -137,9 +137,44 @@ void BackupAppWindow::settingsClicked(){
     app->createSettingsWindow(this);
     std::cout<<"settings"<<std::endl;
 }
+
+
+Gtk::Popover* BackupAppWindow::createPopOver(Gtk::Widget& parent, std::string text, Gdk::Rectangle pos){
+
+    Gtk::Popover* popOver = new Gtk::Popover();
+    Gtk::Label* textLabel = new Gtk::Label(text);
+    Gtk::Box* popOverBox = new Gtk::Box();
+    
+
+    popOverBox->append(*textLabel);
+    popOver->set_child(*popOverBox);
+    popOver->set_parent(parent);
+
+    
+    popOver->set_pointing_to(pos);
+    return popOver; 
+}
+void test(){
+    std::cout<<"abc"<<std::endl;
+}
 void BackupAppWindow::tutorialClicked(){
-    setElementWidths();
     std::cout<<"tutorial"<<std::endl;
+
+    Gdk::Rectangle rec = {300,50,200,50};
+    std::string text = "Settings button can be clicked to bring up a window to allow customising backup options for backup program";
+     //m_searchentry->signal_search_changed().connect(
+  //      sigc::mem_fun(*this, &BackupAppWindow::onSearchTextChanged));
+
+
+    text = text + "\n\n" + "Backup button can be clicked on to run a backup with the settings specified from the settings button";
+    text = text+ "\n\n" + "Backups list on the left shows a list of all backups\nWhere a backup can be selected by clicking time and then pressing select backup button";
+    text = text + "\n\n" + "File tree on right will show the files from the selected backup\nWhere you can click on folders to move directories\nAnd when on the desired directory can press restore files button to restore files from that folder";
+
+    Gtk::Popover* popOver = createPopOver(*this,text,rec);
+    popOver->popup();
+    
+
+
 }
 
 std::string convertEpochToDate(long epochTime){
@@ -329,9 +364,9 @@ void BackupAppWindow::size_allocate_vfunc(int width, int height, int baseline){
 }
 
 
-void BackupAppWindow::onSearchTextChanged(){
-    std::cout<<"search text changed"<<std::endl;
-}
+//void BackupAppWindow::onSearchTextChanged(){
+//    std::cout<<"search text changed"<<std::endl;
+//}
 
 void BackupAppWindow::traversedFileTree(fs::path selectedPath, std::string fileName){
     std::cout<<"button clicked"<<std::endl;
