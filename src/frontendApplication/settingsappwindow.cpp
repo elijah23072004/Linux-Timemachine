@@ -176,6 +176,7 @@ void SettingsAppWindow::saveClicked(){
                 return;
             }
         }
+        if(freqText == ""){freqText="3600";}
         text+="\n[schedule]\n" + freqText;
         schedule=true;
     }
