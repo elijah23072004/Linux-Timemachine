@@ -17,6 +17,7 @@ public:
     void createRecoverWindow(std::vector<std::string> files, std::filesystem::path outputPath);
     void createSettingsWindow(BackupAppWindow* mainWindow);
     void closeWindow(std::string title);
+    Gtk::Window* getWindowByTitle(std::string title);
 protected: 
     BackupAppWindow* create_appwindow();
     void on_startup() override;

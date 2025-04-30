@@ -66,6 +66,11 @@ void BackupApplication::on_action_quit()
 }
 
 void BackupApplication::createRecoverWindow(std::vector<std::string> files, fs::path outputPath){
+    Gtk::Window* win = getWindowByTitle("Recover Files");
+    if(win){
+        win->get_focus();
+        return;
+    }
     auto window = RecoverAppWindow::create(files, outputPath);
     window->setApplication(this);
     add_window(*window);
@@ -76,17 +81,25 @@ void BackupApplication::createRecoverWindow(std::vector<std::string> files, fs::
 }
 
 void BackupApplication::closeWindow(std::string title){
-   auto windows = get_windows();
+    getWindowByTitle(title)->close();
+}
+
+Gtk::Window* BackupApplication::getWindowByTitle(std::string title){
+    auto windows = get_windows();
     for(auto window: windows){
-        std::cout<<window->get_title()<<std::endl;
         if(window->get_title() == title){
-            window->close();
-            return;
+            return window;
         }
     }
+    return NULL;
 }
 
 void BackupApplication::createSettingsWindow(BackupAppWindow* mainWindow){
+    Gtk::Window* win = getWindowByTitle("Settings");
+    if(win){
+        win->get_focus();
+        return;
+    }
     auto window = SettingsAppWindow::create();
     add_window(*window);
     window->setApplication(this);
