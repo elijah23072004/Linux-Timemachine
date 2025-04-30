@@ -54,10 +54,22 @@ SettingsAppWindow::SettingsAppWindow(BaseObjectType* cobject, const Glib::RefPtr
     m_advanced = m_refBuilder->get_widget<Gtk::Label>("advanced");
     if(!m_advanced)
         throw std::runtime_error("No \"advanced\" object in settins.ui");
+    
+    auto ratioLabel = m_refBuilder->get_widget<Gtk::Label>("ratioLabel");
+    if(!ratioLabel)
+        throw std::runtime_error("No \"ratioLabel\" object in settings.ui");
 
     m_backupRatio = m_refBuilder->get_widget<Gtk::Text>("backupRatio");
     if(!m_backupRatio)
         throw std::runtime_error("No \"backupratio\" object in settings.ui");
+    auto freqLabel = m_refBuilder->get_widget<Gtk::Label>("freqLabel");
+    if(!freqLabel)
+        throw std::runtime_error("No \"freqRatio\" object in settings.ui");
+
+    m_frequency = m_refBuilder->get_widget<Gtk::Text>("frequency");
+    if(!m_frequency)
+        throw std::runtime_error("No \"frequency\" object in settings.ui");
+
     m_hidden = m_refBuilder->get_widget<Gtk::CheckButton>("includeHidden");
     if(!m_hidden)
         throw std::runtime_error("No \"includeHidden\" object in settings.ui");
@@ -112,6 +124,7 @@ void SettingsAppWindow::autoFillInputs(){
         else if(line =="[schedule]"){
             std::getline(myfile,line);
             m_schedule->set_active(true);
+            m_frequency->get_buffer()->set_text(line);
         }
         else if(line =="[includeHiddenFiles]"){
             std::getline(myfile,line);
@@ -153,8 +166,17 @@ void SettingsAppWindow::saveClicked(){
         return;
     }
     text+=outputPath;
-    if(m_compression->get_active()){
-        text+="\n[schedule]\n3600";
+    if(m_schedule->get_active()){
+        std::string freqText = m_frequency->get_buffer()->get_text();
+        for(unsigned int i=0; i<freqText.size();i++){
+            if(!std::isdigit(freqText[i])){
+                std::string errMessage = "Please only type digits into backup frequency";
+                m_errLabel->set_label(errMessage);
+                m_frequency->get_buffer()->delete_text(0,-1);
+                return;
+            }
+        }
+        text+="\n[schedule]\n" + freqText;
         schedule=true;
     }
     if(m_backupRatio->get_buffer()->get_text() != ""){
@@ -187,7 +209,35 @@ void SettingsAppWindow::saveClicked(){
     fs::path configFolder = std::string(std::getenv("HOME")) + "/.config/TimeMachine";
     fs::create_directory(configFolder); 
     writeToFile(configFolder / "config.conf", text);
-    if(schedule)setupSystemdTimer();
+    std::string frequency = m_frequency->get_buffer()->get_text();
+    if(schedule){
+        if(frequency == "")setupSystemdTimer("1h");
+        else{
+            std::string time = "";
+            long freqTime = std::stol(frequency);
+            if(freqTime>(7*24*60*60)){
+                time += std::to_string(freqTime/(7*24*60*60)) + "w ";
+                freqTime = freqTime%(7*24*60*60); 
+            }
+            if(freqTime>(24*60*60)){
+                time+= std::to_string(freqTime/(24*60*60)) + "d ";
+                freqTime = freqTime%(24*60*60);
+            }
+            if(freqTime>(60*60)){
+                time+=std::to_string(freqTime/(60*60)) + "h ";
+                freqTime = freqTime%(60*60);
+            }
+            if(freqTime>(60)){
+                time+=std::to_string(freqTime/(60)) + "m ";
+                freqTime = freqTime%60;
+            }
+            if(freqTime>0){
+                time+=std::to_string(freqTime) + "s ";
+            }
+            if(time == ""){time="1h";}
+            setupSystemdTimer(time);
+        }
+    }
     else{
         system("systemctl --user disable TimeMachine.timer");
     }
@@ -229,13 +279,12 @@ void SettingsAppWindow::openFileDialog(bool inputDialog){
 
 
 
-void SettingsAppWindow::setupSystemdTimer(){
+void SettingsAppWindow::setupSystemdTimer(std::string time){
     std::string homeDir = std::getenv("HOME");
     std::string serviceLoc = homeDir + "/.config/systemd/user/TimeMachine.service";
     std::string timerLoc = homeDir+ "/.config/systemd/user/TimeMachine.timer";
     
-    std::string serviceStr = R""""(
-[Unit]
+    std::string serviceStr = R""""([Unit]
 Description=TimeMachine is a differential backup system
 
 [Service]
@@ -247,17 +296,14 @@ Type=simple
 WantedBy=default.target
     )"""";
 
-    std::string timerStr = R""""(
-[Unit]
+    std::string timerStr = R""""([Unit]
 Description=Schedule timeMachineCLI to be ran repeatedly 
 
 [Timer]
 OnBootSec=15min
-OnUnitActiveSec=1h
+OnUnitActiveSec=)"""";
+    timerStr+= time + "\n\n[Install]\nWantedBy=timers.target";
 
-[Install]
-WantedBy=timers.target
-    )"""";
 
 
     writeToFile(serviceLoc, serviceStr);

@@ -80,11 +80,38 @@
                     </object>
                 </child>
                 <child>
-                    <object class="GtkText" id="backupRatio">
-                        <property name="placeholder_text">Please type ratio between backup types</property>
+                    <object class="GtkLabel" id="ratioLabel">
+                        <property name="label">Ratio between full and differential backups:</property>
                         <layout>
                             <property name="column">0</property>
                             <property name="row">6</property>
+                        </layout>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkText" id="backupRatio">
+                        <property name="placeholder_text">Please type ratio between backup types</property>
+                        <layout>
+                            <property name="column">1</property>
+                            <property name="row">6</property>
+                        </layout>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkLabel" id="freqLabel">
+                        <property name="label">Backup frequency (in seconds) </property>
+                        <layout>
+                            <property name="column">0</property>
+                            <property name="row">7</property>
+                        </layout>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkText" id="frequency">
+                        <property name="placeholder_text">Time between backups</property>
+                        <layout>
+                            <property name="column">1</property>
+                            <property name="row">7</property>
                         </layout>
                     </object>
                 </child>
@@ -93,7 +120,7 @@
                         <property name="label">Include hidden files in backups</property>
                         <layout>
                             <property name="column">0</property>
-                            <property name="row">7</property>
+                            <property name="row">8</property>
                         </layout>
                     </object>
                 </child>
@@ -102,7 +129,7 @@
                         <property name="label"> Cancel </property>
                         <layout>
                             <property name="column">0</property>
-                            <property name="row">8</property>
+                            <property name="row">9</property>
                         </layout>
                     </object>
                 </child>
@@ -111,7 +138,7 @@
                         <property name="label"> Save </property>
                         <layout>
                             <property name="column">1</property>
-                            <property name="row">8</property>
+                            <property name="row">9</property>
                         </layout>
                     </object>
                 </child>
@@ -119,7 +146,7 @@
                     <object class="GtkLabel" id="errLabel">
                         <layout>
                             <property name="column">0</property>
-                            <property name="row">9</property>
+                            <property name="row">10</property>
                         </layout>
                     </object>
                 </child>

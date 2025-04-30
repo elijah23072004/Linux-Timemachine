@@ -25,7 +25,7 @@ public:
     std::filesystem::path backupLocation;
     std::filesystem::path selectedBackup;
     void writeToFile(fs::path path, std::string text, bool append=false);
-    void setupSystemdTimer();
+    void setupSystemdTimer(std::string time="1h");
     void autoFillInputs();
 
 protected:
@@ -37,6 +37,7 @@ protected:
     Gtk::CheckButton* m_compression;
     Gtk::CheckButton* m_schedule;
     Gtk::Label* m_advanced;
+    Gtk::Text* m_frequency;
     Gtk::Text* m_backupRatio;
     Gtk::CheckButton* m_hidden;
     Gtk::Button* m_cancel;

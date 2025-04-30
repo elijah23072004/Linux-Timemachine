@@ -477,7 +477,7 @@ OnBootSec=15min
 OnUnitActiveSec=1h
 
 [Install]
-WantedBy=timers.target
+WantedBy=timers.target";
     )"""";
 
 
