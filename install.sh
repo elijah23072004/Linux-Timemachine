@@ -8,7 +8,7 @@ path_loc="/usr/local/bin/"
 data_loc="/usr/lib/"
 
 meson setup $build_dir 
-if meson compile -C $build_dir; then;
+if meson compile -C ${build_dir}; then
 
 
     if ! test -w $path_loc; then 
