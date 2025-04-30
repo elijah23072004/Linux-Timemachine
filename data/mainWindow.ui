@@ -51,11 +51,6 @@
                 <child>
                     <object class="GtkGrid" id="backupGrid">
                         <child>
-                            <object class="GtkLabel" id="backupLabel">
-                                <property name="label">Backups:</property>
-                            </object>
-                        </child>
-                        <child>
                             <object class="GtkBox" id="lastBackups">
                                 <property name="orientation">vertical</property>
                                 <child>

@@ -18,6 +18,9 @@ cpp_sources2 = [
   'src/frontendApplication/recoverappwindow.cpp',
   'src/frontendApplication/settingsappwindow.cpp']
 exe2 = executable('linuxTimeMachineApp', cpp_sources2,dependencies: gtkmm_dep)
-test('basic', exe)
 
 exe3 = executable('createRandomDifferences', 'src/testing/createRandomDifferences.cpp')
+
+exe4 = executable('utilsTests,', 'src/testing/utilsUnitTests.cpp')
+
+test('Utils unit tests', exe4)

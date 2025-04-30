@@ -1,6 +1,6 @@
-location="/home/eli/Documents/backupsTest/fileSystem"
-output1="/home/eli/Documents/backupsTest/noCompression"
-output2="/home/eli/Documents/backupsTest/compression"
+location="~/Documents/backupsTest/fileSystem"
+output1="~/Documents/backupsTest/noCompression"
+output2="~/Documents/backupsTest/compression"
 flags1="-r 50"
 flags2="-cr 50"
 changeAmount="25000000"
@@ -11,7 +11,7 @@ rm ${location} -r
 mkdir ${output1}
 mkdir ${output2}
 
-dataLocation="/home/eli/Documents/backupsTest/data.dat"
+dataLocation="~/Documents/backupsTest/data.dat"
 rm ${dataLocation}
 touch ${dataLocation}
 ./build/randomFileSystemGenerator ${location}

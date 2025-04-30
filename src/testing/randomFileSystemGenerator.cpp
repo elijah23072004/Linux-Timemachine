@@ -12,7 +12,7 @@ void createFileSystem(fs::path path, long targetSize);
 int main(int argc, char* argv[]){
     srand(time(NULL));
 
-    //5GB target file size 
+    //2.5GB target file size 
     long targetSize = 2500000000;
 
     if(argc < 2) {return -1;}

@@ -26,7 +26,8 @@ bool isDirectory(fs::path path)
 
 std::string trimWhitespace(std::string str){
     int start=0;
-    int end=str.size()-1;
+    int end=0;
+    //default is start and end at 0 so if full str is whitespace return empty string
     char whiteSpace[] = {' ', '\t', '\n'};
     for(int i=0;str[i];i++){
         if(strchr(whiteSpace, str[i]) == NULL){
@@ -40,7 +41,6 @@ std::string trimWhitespace(std::string str){
             break;
         }
     }
-
     return str.substr(start,end-start);
 }
 

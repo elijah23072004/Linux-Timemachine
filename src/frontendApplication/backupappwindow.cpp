@@ -46,9 +46,9 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
         throw std::runtime_error("No \"quit\" object in mainWindow.ui");
     m_quit->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &BackupAppWindow::quitClicked)));
     
-    m_backupLabel = m_refBuilder->get_widget<Gtk::Label>("backupLabel");
-    if(!m_backupLabel)
-        throw std::runtime_error("No \"backupLabel\" object in mainWindow.ui");
+    //m_backupLabel = m_refBuilder->get_widget<Gtk::Label>("backupLabel");
+    //if(!m_backupLabel)
+    //    throw std::runtime_error("No \"backupLabel\" object in mainWindow.ui");
 
     //m_searchentry = m_refBuilder->get_widget<Gtk::SearchEntry>("backupSearchEntry");
     //if(!m_searchentry)
@@ -192,6 +192,7 @@ void BackupAppWindow::populateBackups(fs::path backupLocation){
     }
     std::vector<std::string> backupVec = split(backups, '\n');
     Gtk::Label  label = Gtk::Label("Backups:");
+    label.set_name("Backup Title");
     m_backupList->append(label);
     Gtk::Button* select = new Gtk::Button("Select Backup");
     select->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,&BackupAppWindow::backupSelected)));
@@ -340,7 +341,9 @@ void BackupAppWindow::backupSelected(){
     if(m_backupList->get_selected_row() == 0){return;}
     std::vector<Gtk::Widget*> selected = m_backupList->get_selected_row()->get_children();
     std::cout<<selected.at(0)->get_name()<<std::endl;
-
+    if(selected.at(0)->get_name()=="Backup Title"){
+        return;
+    }
     currentSelectedBackup = outputDir/"fileTrees"/std::string(selected.at(0)->get_name());
     //populateFileTree(outputDir/"fileTrees"/std::string(selected.at(0)->get_name()), fs::path(""));
     populateFileTree(currentSelectedBackup, fs::path(""));
