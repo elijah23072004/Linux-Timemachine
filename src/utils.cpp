@@ -339,9 +339,12 @@ std::string getFileTree(fs::path path, fs::path outputPath, bool includeHiddenFi
             if(!includeHiddenFiles && entry.filename().string()[0] == '.'){
                 continue;
             }
-            fileTree += entry.string() + "\n";
             if(is_directory(entry)){
                 folderQueue.push_back(entry);
+                fileTree += entry.string() + "/\n";
+            }
+            else{
+                fileTree += entry.string() + "\n";
             }
         }
     }
