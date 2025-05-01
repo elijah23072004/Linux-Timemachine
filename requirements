@@ -1,0 +1,31 @@
+extra requirement for diss 
+meson build system 
+as it is the build system used to 
+compile the project 
+
+(can be installed without meson but 
+would require linking each
+individual file
+
+requires gtk 4.10 
+so debian and ubutnu only have support for 
+gtk 4.8
+for debian to have a gkmm4 package that supports 4.10 need to run instable install of debian
+however arch and some other deskop distributions support gtk 4.10
+
+ubuntu package required 
+libgtkmm-4.0-dev
+meson 
+
+debian 
+libgtkmm-4.0-dev
+meson
+
+tset
+glib2.0
+
+
+
+arch package required
+meson 
+gtkmm-4.0

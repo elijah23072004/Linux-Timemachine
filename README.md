@@ -15,3 +15,17 @@ timeMachine
 to run CLI
 timeMachineCLI <arguments>
 
+
+gentoo 
+dev-cpp/gtkmm 
+version 4.14 support 
+
+fedora / redhat
+version 4.18 support 
+
+opensusse 
+gtkmm4-devel 4.18 support 
+
+
+
+

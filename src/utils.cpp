@@ -154,8 +154,8 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                         //archive has this file
                         //will override file if file with same name exists in directory however should always call this into tmp directory and shouldn't happen since file names 
                         //will have random numeric number
-                        std::string command = "tar -zxvf " + (backupFolder / backupLocations.at(0) /  files.at(0)).string() 
-                            + " --directory="+outputLocation.parent_path().string() + " " + relativePath.filename().string() + " >/dev/null";
+                        std::string command = "tar -zxvf \"" + (backupFolder / backupLocations.at(0) /  files.at(0)).string() 
+                            + "\" --directory=\""+outputLocation.parent_path().string() + "\" \"" + relativePath.filename().string() + "\" >/dev/null";
                         system(command.c_str());
                         fs::rename(outputLocation.parent_path() / relativePath.filename(), outputLocation);
                         found=true;
@@ -196,8 +196,8 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                             //will override file if file with same name exists in directory which will happen if multiple different diff files 
                             //so fix is to put it in a tar folder 
                             fs::create_directory(outputLocation.parent_path()/"tarFolder");
-                            std::string command = "tar -zxvf " + (backupFolder / location /  files.at(0)).string() 
-                                + " --directory="+(outputLocation.parent_path()/"tarFolder").string() + " " + relativePath.filename().string() + " >/dev/null";
+                            std::string command = "tar -zxvf \"" + (backupFolder / location /  files.at(0)).string() 
+                                + "\" --directory=\""+(outputLocation.parent_path()/"tarFolder").string() + "\" \"" + relativePath.filename().string() + "\" >/dev/null";
                             system(command.c_str());
                             //gets put in relative path like 123/abc where currently just want /abc here 
                             //fix could be to put into compression just the abc part not the other sections
@@ -222,7 +222,7 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                 continue;
             }
         }
-        std::string command = "patch -Ns " + outputLocation.string() + " < " + diffLocation + " >/dev/null";
+        std::string command = "patch -Ns \"" + outputLocation.string() + "\" < \"" + diffLocation + "\" >/dev/null";
         //std::cout<<command<<std::endl;
         system(command.c_str());
         fs::remove_all(outputLocation.parent_path()/"tarFolder");
@@ -325,7 +325,7 @@ std::vector<fs::path> findRecentBackups(fs::path path){
     return backups;
 }
 
-std::string getFileTree(fs::path path, bool includeHiddenFiles=false){
+std::string getFileTree(fs::path path, fs::path outputPath, bool includeHiddenFiles=false){
     //start fileTree with relative path so can substr further elements if desired
     std::string fileTree = path.string() + "\n";
     std::vector<fs::path> folderQueue;
@@ -335,6 +335,7 @@ std::string getFileTree(fs::path path, bool includeHiddenFiles=false){
         currentPath = folderQueue.at(0);
         folderQueue.erase(folderQueue.begin());
         for(const  fs::path & entry : fs::directory_iterator(currentPath)){
+            if(entry == outputPath){continue;}
             if(!includeHiddenFiles && entry.filename().string()[0] == '.'){
                 continue;
             }
@@ -352,9 +353,10 @@ std::string getFileTree(fs::path path, bool includeHiddenFiles=false){
 }
 //takes inputPAth as argumetn which is location where file tree should be made of 
 //and destination as arguement which is the full path of where to save file tree
-void saveFileTree(fs::path inputPath, fs::path destination, bool includeHiddenFiles=false){
+//will not include outputPath in file tree
+void saveFileTree(fs::path inputPath, fs::path destination, fs::path outputPath, bool includeHiddenFiles=false){
     //creates folder to store destination if doesn't exist
-    std::string tree = getFileTree(inputPath, includeHiddenFiles);
+    std::string tree = getFileTree(inputPath, outputPath, includeHiddenFiles);
     createParentFolderIfDoesntExist(destination);
     writeToFile(destination, tree);
 }
@@ -366,9 +368,9 @@ std::string compressAndDeleteFiles(std::vector<fs::path> files){
         i++;
         backupLocation = files.at(0).parent_path() / (std::to_string(i)+".tar");
     }
-    std::string command = "tar czf " + backupLocation + " -C" + files.at(0).parent_path().string();
+    std::string command = "tar czf \"" + backupLocation + "\" -C \"" + files.at(0).parent_path().string() + "\"";
     for(fs::path file :files){
-        command += " " + file.filename().string();
+        command += " \"" + file.filename().string() + "\"";
 
     }
     command += " >/dev/null";

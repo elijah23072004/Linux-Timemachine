@@ -16,8 +16,8 @@ bool isFileModifiedAfterTime(fs::path file, long time){
     return result.st_mtime >= time;
     
 }
-
-std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime, bool includeHiddenFiles=false){
+//will not include outputPath in return vector 
+std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime, fs::path outputPath, bool includeHiddenFiles=false){
 
     std::vector<fs::path> changedFiles;
     std::vector<fs::path> folderQueue;
@@ -27,9 +27,10 @@ std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime, bool incl
     {
         current_path=folderQueue.at(0);
         folderQueue.erase(folderQueue.begin());
-        for (const auto & entry : fs::directory_iterator(current_path)){
+        for (const fs::path & entry : fs::directory_iterator(current_path)){
             //if includeHiddenFiles is false and relative path starts with . then a hidden file and skip
-            std::string fileName = entry.path().filename();
+            if(entry == outputPath){continue;} 
+            std::string fileName = entry.filename();
             if(!includeHiddenFiles && fileName[0] == '.'){
                 continue;
             }
@@ -84,7 +85,7 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
     outputPath.append(newFolderName);
     std::cout<<"output location: "<<outputPath.string()<<std::endl;
     
-    std::vector<fs::path> changedFiles = getAllChangedFiles(inputPath, lastBackupTime, includeHiddenFiles);
+    std::vector<fs::path> changedFiles = getAllChangedFiles(inputPath, lastBackupTime, outputFolder, includeHiddenFiles);
     
     //temparily just store full files (incremental backup) 
     int inputPathLength = inputPath.string().size();
@@ -128,20 +129,11 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
         long compressionSize = 32768;
         compressBackupDirectory(outputPath, outputPath.parent_path() / "backupMaps"/newFolderName, compressionSize);
     }
-    saveFileTree(inputPath, fileTreeDestination, includeHiddenFiles);
+    saveFileTree(inputPath, fileTreeDestination, outputFolder, includeHiddenFiles);
     logBackup(newFolderName, outputFolder);
     return 0;
 }
 
 
-void changedFileTester(fs::path path){
-    //changed in last minute 
-    long time = std::time(0) - 60;
-    std::vector<fs::path> files =  getAllChangedFiles(path,time);
-    for(auto i:files){
-        std::cout<<i<<std::endl;
-    }
-
-}
 
 #endif

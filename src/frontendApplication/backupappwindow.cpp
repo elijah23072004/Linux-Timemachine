@@ -126,7 +126,7 @@ void BackupAppWindow::quitClicked(){
 }
 
 void BackupAppWindow::backupClicked(){
-    std::cout<<system("timeMachineCLI")<<std::endl;
+    std::cout<<system("timeMachineCLI &")<<std::endl;
     populateBackups(outputDir);
     std::cout<<"backup"<<std::endl;
 }
@@ -194,6 +194,9 @@ void BackupAppWindow::populateBackups(fs::path backupLocation){
     Gtk::Label  label = Gtk::Label("Backups:");
     label.set_name("Backup Title");
     m_backupList->append(label);
+    Gtk::Button* refresh = new Gtk::Button("Refresh backupList");
+    refresh->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,&BackupAppWindow::populateBackups),backupLocation));
+    m_backupList->append(*refresh);
     Gtk::Button* select = new Gtk::Button("Select Backup");
     select->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,&BackupAppWindow::backupSelected)));
     m_backupList->append(*select);
@@ -258,8 +261,17 @@ void BackupAppWindow::populateFileTree(fs::path fileTreeLocation, fs::path selec
         
         //if text contains / in path then it is in a sub folder
         if(text.find('/') != std::string::npos){
+            int index = text.find('/');
+            text[index]='\\';
+            if(text.substr(index).find('/') != std::string::npos){
+                //if in 2 levels of subfolders then dont append to list since 
+                //file inside desired folder already found
+                continue;
+            }
+            text[index]='/';
             text = text.substr(0,text.find('/'));
             //add file to vector with / at end to symbolise a folder            
+            //
             filteredFiles.push_back(text  +"/");
 
             continue;
