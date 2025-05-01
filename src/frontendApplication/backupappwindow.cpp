@@ -279,11 +279,11 @@ void BackupAppWindow::populateFileTree(fs::path fileTreeLocation, fs::path selec
         filteredFiles.push_back(text);
 
     }
-    std::cout<<filteredFiles.size()<<std::endl;
     //remove duplicates (like folder in twice or abc and abc/ both in)
     for(unsigned int i=0; i<filteredFiles.size();i++){
         std::string toFind = filteredFiles.at(i);
         bool isFolder=false;
+        if(toFind.size() == 0){continue;}
         if(toFind[toFind.size()-1] == '/'){
             toFind=toFind.substr(0,toFind.size()-1);
             isFolder=true;
@@ -312,6 +312,7 @@ void BackupAppWindow::populateFileTree(fs::path fileTreeLocation, fs::path selec
         folders.push_back("../");
     }
     for(std::string file: filteredFiles){
+        if(file.size() == 0){continue;}
         if(file[file.size()-1] == '/'){
             folders.push_back(file);
         }
@@ -321,15 +322,17 @@ void BackupAppWindow::populateFileTree(fs::path fileTreeLocation, fs::path selec
     }
 
     std::vector<std::string> combined = folders; 
-    combined.insert(combined.end(), nonFolders.begin(), nonFolders.end());
-
+    if(nonFolders.empty()){
+        combined.insert(combined.end(), nonFolders.begin(), nonFolders.end());
+    }
     Gtk::Button* button =new  Gtk::Button("Restore Files");
     fs::path backupLocation =fileTreeLocation.parent_path().parent_path() / backupName; 
     for(unsigned int i=0; i<combined.size();i++){
         combined.at(i) = (selectedPath/combined.at(i)).string();
     }
     //get rid of ../ entry
-    if(combined.at(0) == "../"){
+    std::cout<<"combined size: " <<combined.size()<<std::endl;
+    if(combined.size() == 0 || combined.at(0) == "../"){
         combined.erase(combined.begin());
     }
     button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &BackupAppWindow::restoreFiles),combined, backupLocation ));
