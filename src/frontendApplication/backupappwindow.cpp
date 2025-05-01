@@ -57,10 +57,22 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
    // m_searchbar = m_refBuilder->get_widget<Gtk::SearchBar>("backupSearch");
    // if(!m_searchbar)
    //     throw std::runtime_error("No \"backupSearch\" object in mainWindow.ui");
+        
+     
+    m_backupsScrollable = m_refBuilder->get_widget<Gtk::ScrolledWindow>("backupsScrollable");
+    if(!m_backupsScrollable)
+        throw std::runtime_error("No \"backupsScrollable\" object in mainWindow.ui");
+
+   
 
     m_backupList = m_refBuilder->get_widget<Gtk::ListBox>("backupList");
     if(!m_backupList)
         throw std::runtime_error("No \"backups\" object in mainWindow.ui");
+    
+    m_filesScrollable = m_refBuilder->get_widget<Gtk::ScrolledWindow>("filesScrollable");
+    if(!m_filesScrollable)
+        throw std::runtime_error("No \"filesScrollable\" object in mainWindow.ui");
+
     m_fileTree = m_refBuilder->get_widget<Gtk::ListBox>("fileTree");
     if(!m_fileTree)
         throw std::runtime_error("No \"fileTree\" object in mainWindow.ui");
@@ -126,7 +138,7 @@ void BackupAppWindow::quitClicked(){
 }
 
 void BackupAppWindow::backupClicked(){
-    std::cout<<system("timeMachineCLI &")<<std::endl;
+    std::cout<<system("systemctl --user start TimeMachine.service")<<std::endl;
     populateBackups(outputDir);
     std::cout<<"backup"<<std::endl;
 }
@@ -210,7 +222,6 @@ void BackupAppWindow::populateBackups(fs::path backupLocation){
 
         m_backupList->append(label);
     }
-    
     
 }
 
@@ -322,7 +333,7 @@ void BackupAppWindow::populateFileTree(fs::path fileTreeLocation, fs::path selec
     }
 
     std::vector<std::string> combined = folders; 
-    if(nonFolders.empty()){
+    if(!nonFolders.empty()){
         combined.insert(combined.end(), nonFolders.begin(), nonFolders.end());
     }
     Gtk::Button* button =new  Gtk::Button("Restore Files");
@@ -332,9 +343,10 @@ void BackupAppWindow::populateFileTree(fs::path fileTreeLocation, fs::path selec
     }
     //get rid of ../ entry
     std::cout<<"combined size: " <<combined.size()<<std::endl;
-    if(combined.size() == 0 || combined.at(0) == "../"){
+    if(combined.size() != 0 && combined.at(0) == "../"){
         combined.erase(combined.begin());
     }
+    
     button->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &BackupAppWindow::restoreFiles),combined, backupLocation ));
     m_fileTree->append(*button);
 
@@ -357,6 +369,7 @@ void BackupAppWindow::backupSelected(){
     std::vector<Gtk::Widget*> selected = m_backupList->get_selected_row()->get_children();
     std::cout<<selected.at(0)->get_name()<<std::endl;
     if(selected.at(0)->get_name()=="Backup Title"){
+
         return;
     }
     currentSelectedBackup = outputDir/"fileTrees"/std::string(selected.at(0)->get_name());
@@ -367,12 +380,15 @@ void BackupAppWindow::backupSelected(){
 void BackupAppWindow::setElementWidths(){
     int windowWidth= 0;
     windowWidth = this->get_width();
+    int windowHeight = this->get_height();
     int buttonWidth = windowWidth/3; 
     m_backup->set_size_request(buttonWidth, -1);
     m_settings->set_size_request(buttonWidth, -1);
     m_tutorial->set_size_request(buttonWidth,-1);
+    m_backupsScrollable->set_size_request(windowWidth*0.33, -1);
     m_backupList->set_size_request(windowWidth*0.33, -1);
-    m_fileTree->set_size_request(windowWidth*0.66,-1);
+    m_filesScrollable->set_size_request(windowWidth*0.66,windowHeight*0.9);
+    m_fileTree->set_size_request(windowWidth*0.66,windowHeight*0.9);
 
 }
 

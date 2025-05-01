@@ -11,6 +11,7 @@ class RecoverAppWindow : public Gtk::ApplicationWindow
 public:
     RecoverAppWindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refBuilder);
     static RecoverAppWindow* create(std::vector<std::string> files, std::filesystem::path backupLocation);
+    void setElementWidths();
 
     void restoreClicked();
     void cancelClicked();
@@ -22,7 +23,10 @@ public:
     std::filesystem::path backupLocation;
     std::filesystem::path selectedBackup;
 protected:
+    void size_allocate_vfunc(int width, int height, int baseline) override;
+
     Glib::RefPtr<Gtk::Builder> m_refBuilder;
+    Gtk::ScrolledWindow* m_listScrollable;
     Gtk::ListBox* m_listBox;
     Gtk::Button* m_fileDialogButton;
     Gtk::Button* m_cancel;

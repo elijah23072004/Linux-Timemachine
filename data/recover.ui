@@ -17,7 +17,11 @@
                     </object>
                 </child>
                 <child>
-                    <object class="GtkListBox" id="listBox">
+                    <object class="GtkScrolledWindow" id="listScrollable">
+                        <child>
+                            <object class="GtkListBox" id="listBox">
+                            </object>
+                        </child>
                         <layout>
                             <property name="column">0</property>
                             <property name="row">1</property>

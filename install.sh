@@ -6,6 +6,7 @@ rm -r $build_dir
 
 path_loc="/usr/local/bin/"
 data_loc="/usr/lib/"
+application_loc="/usr/share/applications/"
 
 meson setup $build_dir 
 if meson compile -C ${build_dir}; then
@@ -19,7 +20,7 @@ if meson compile -C ${build_dir}; then
 
     cp ${build_dir}/linuxTimeMachineBackend ${path_loc}timeMachineCLI
     cp ${build_dir}/linuxTimeMachineApp ${path_loc}timeMachine
-
+    cp ./data/timeMachine.desktop ${application_loc}
     echo $PATH
 
 

@@ -19,7 +19,9 @@ RecoverAppWindow::RecoverAppWindow(BaseObjectType* cobject, const Glib::RefPtr<G
     auto contentGrid = m_refBuilder->get_widget<Gtk::Grid>("contentGrid");
     if(!contentGrid)
         throw std::runtime_error("No \"backupGrid\" object in recover.ui");
-
+    m_listScrollable = m_refBuilder->get_widget<Gtk::ScrolledWindow>("listScrollable");
+    if(!m_listScrollable)
+        throw std::runtime_error("No \"listScrollable\" object in recover.ui");
     m_listBox = m_refBuilder->get_widget<Gtk::ListBox>("listBox");
     if(!m_listBox)
         throw std::runtime_error("No \"listBox\" object in recover.ui");
@@ -57,7 +59,7 @@ RecoverAppWindow::RecoverAppWindow(BaseObjectType* cobject, const Glib::RefPtr<G
             //m_dialog = Gtk::FileDialog::Create();
         //throw std::runtime_error("No \"fileDialog\" object in recover.ui");
     //}
-    
+     
 }
 
 RecoverAppWindow* RecoverAppWindow::create(std::vector<std::string> files, fs::path backupLocation)
@@ -68,6 +70,7 @@ RecoverAppWindow* RecoverAppWindow::create(std::vector<std::string> files, fs::p
         throw std::runtime_error("No \"app_window\" in recover.ui");
     window->populateListBox(files);
     window->backupLocation=backupLocation;
+    window->setElementWidths();
     return window;
 }
 
@@ -166,4 +169,20 @@ void RecoverAppWindow::selectAllClicked()
         button->set_active(true);
     }
 }
+
+
+void RecoverAppWindow::setElementWidths(){
+    int windowWidth= 0;
+    windowWidth = this->get_width();
+    int windowHeight = this->get_height();
+    m_listScrollable->set_size_request(windowWidth*0.66,windowHeight*0.4);
+    m_listBox->set_size_request(windowWidth*0.66,-1);
+
+}
+
+void RecoverAppWindow::size_allocate_vfunc(int width, int height, int baseline){
+    Gtk::Widget::size_allocate_vfunc(width, height, baseline);
+    setElementWidths();
+}
+
 

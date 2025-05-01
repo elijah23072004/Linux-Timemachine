@@ -374,7 +374,6 @@ std::string compressAndDeleteFiles(std::vector<fs::path> files){
     std::string command = "tar czf \"" + backupLocation + "\" -C \"" + files.at(0).parent_path().string() + "\"";
     for(fs::path file :files){
         command += " \"" + file.filename().string() + "\"";
-
     }
     command += " >/dev/null";
     system(command.c_str());

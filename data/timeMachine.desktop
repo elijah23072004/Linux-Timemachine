@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=TimeMachine
+Comment=Differential backup solution for Linux
+Path=/usr/local/bin
+Exec=timeMachine
+Terminal=false

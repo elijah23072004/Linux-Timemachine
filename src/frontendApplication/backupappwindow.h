@@ -35,6 +35,8 @@ protected:
    // Gtk::SearchEntry* m_searchentry {nullptr};
     Gtk::ListBox* m_backupList {nullptr};
     Gtk::ListBox* m_fileTree {nullptr};
+    Gtk::ScrolledWindow* m_filesScrollable {nullptr};
+    Gtk::ScrolledWindow* m_backupsScrollable {nullptr};
 
     
 private:
