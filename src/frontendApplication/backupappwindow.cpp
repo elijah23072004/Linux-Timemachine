@@ -17,7 +17,7 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
  :  Gtk::ApplicationWindow(cobject),
     m_refBuilder(refBuilder)
 {
-
+    //loads widgets from ui file to window
     auto menu = m_refBuilder->get_widget<Gtk::Grid>("menuButtons");
     if(!menu)
         throw std::runtime_error("No \"menuButtons\" object in mainWindow.ui");
@@ -46,17 +46,6 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
         throw std::runtime_error("No \"quit\" object in mainWindow.ui");
     m_quit->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &BackupAppWindow::quitClicked)));
     
-    //m_backupLabel = m_refBuilder->get_widget<Gtk::Label>("backupLabel");
-    //if(!m_backupLabel)
-    //    throw std::runtime_error("No \"backupLabel\" object in mainWindow.ui");
-
-    //m_searchentry = m_refBuilder->get_widget<Gtk::SearchEntry>("backupSearchEntry");
-    //if(!m_searchentry)
-    //    throw std::runtime_error("No \"backupSearchEntry\" object in window.ui");
-
-   // m_searchbar = m_refBuilder->get_widget<Gtk::SearchBar>("backupSearch");
-   // if(!m_searchbar)
-   //     throw std::runtime_error("No \"backupSearch\" object in mainWindow.ui");
         
      
     m_backupsScrollable = m_refBuilder->get_widget<Gtk::ScrolledWindow>("backupsScrollable");
@@ -77,15 +66,6 @@ BackupAppWindow::BackupAppWindow(BaseObjectType* cobject,
     if(!m_fileTree)
         throw std::runtime_error("No \"fileTree\" object in mainWindow.ui");
 
-    //m_searchbar->connect_entry(*m_searchentry);
-    //m_searchbar->set_search_mode(true);
-
-  //  m_searchentry->signal_search_changed().connect(
-  //      sigc::mem_fun(*this, &BackupAppWindow::onSearchTextChanged));
-    //need to set widths and locations of log,backup,restore,edit,tutorial buttons so fit top width of screen 
-    //row->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this,
-    //  &ExampleAppWindow::on_find_word), row));
-   
 
     emptyFileTree();
 
@@ -107,7 +87,8 @@ BackupAppWindow* BackupAppWindow::create(BackupApplication* application)
 void BackupAppWindow::checkConfigFile(){
     std::string homeDir = std::getenv("HOME");
     fs::path configFile = homeDir + "/.config/TimeMachine/config.conf";
-
+    //reads config file and if config file doesnt exist open settings window 
+    //populate backups list if config file exists
     if(!fs::exists(configFile)){
         app->createSettingsWindow(this);
         return;
@@ -166,9 +147,6 @@ Gtk::Popover* BackupAppWindow::createPopOver(Gtk::Widget& parent, std::string te
     popOver->set_pointing_to(pos);
     return popOver; 
 }
-void test(){
-    std::cout<<"abc"<<std::endl;
-}
 void BackupAppWindow::tutorialClicked(){
     std::cout<<"tutorial"<<std::endl;
 
@@ -196,6 +174,7 @@ std::string convertEpochToDate(long epochTime){
 }
 
 void BackupAppWindow::populateBackups(fs::path backupLocation){
+    //iterates over every backup and adds a label to backuplist widget
     fs::path backupLog = backupLocation / "backups.log";
     std::string backups = readFromFile(backupLog);
     for(auto element : m_backupList->get_children()){

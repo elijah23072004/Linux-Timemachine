@@ -83,15 +83,18 @@ bool doesEpochBackupExists(fs::path path, long epochTime){
 }
 
 void logBackup(std::string backupName, fs::path outputLocation){
+    //writes backupName to backups.log and fullBackup.log
     fs::path backupLogFile = outputLocation / "backups.log";
     fs::path fullBackupLog = outputLocation / "fullBackup.log";
     std::string text = backupName + "\n";
-    bool append = backupName.back() != 'f';
+    bool append = backupName.back() != 'f';//if backup is a fullbackup then do not append to fullBackup file and erase contents before writing
     writeToFile(fullBackupLog,text, append);
     writeToFile(backupLogFile,text, true);
 }
 
 void createParentFolderIfDoesntExist(fs::path path){
+    //if the folder path resides in does not exist create it (e.g. path is ~/Documents/testFolder/f1/f2 and testFolder does not exist 
+    //program will create testFolder then folder f1 in testFolder but will not create f2
     fs::path parentPath = path.parent_path();
     std::vector<fs::path> foldersToCreate;
     while(!doesPathExist(parentPath)){
@@ -107,7 +110,7 @@ void createParentFolderIfDoesntExist(fs::path path){
 
 std::vector<std::string> split(std::string str, char delimiter)
 {
-  // Using str in a string stream
+    // Using str in a string stream
     std::stringstream ss(str);
     std::vector<std::string> res;
     std::string token;
@@ -118,6 +121,7 @@ std::vector<std::string> split(std::string str, char delimiter)
 }
 
 //takes relativePath as arguemnt which is the relative path of a file to the start of a backup 
+//file name is optional parameter which if not NULL can store fileName in relativePAth to recover 
 //and a vector of paths (backupLocations) which stores all the backups to look at with the first in the vector
 //to be the full backup
 //returns a path to the recovered File 
@@ -134,7 +138,7 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
         outputLocation/=std::to_string(std::time(0));
     }
     createParentFolderIfDoesntExist(outputLocation);
-    //std::cout<<backupFolder << " backupMaps " <<backupLocations.at(0).filename()<<std::endl; 
+    //if file exists then that backup used compression so uncompress file from full backup to be able to used later in function
     if(doesPathExist(backupFolder / "backupMaps" / backupLocations.at(0).filename())){
         std::ifstream f;
         f.open( (backupFolder / "backupMaps" / backupLocations.at(0).filename()).c_str() );
@@ -154,6 +158,7 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                         //archive has this file
                         //will override file if file with same name exists in directory however should always call this into tmp directory and shouldn't happen since file names 
                         //will have random numeric number
+                        //and tmp directory is cleaned up after each backup
                         std::string command = "tar -zxvf \"" + (backupFolder / backupLocations.at(0) /  files.at(0)).string() 
                             + "\" --directory=\""+outputLocation.parent_path().string() + "\" \"" + relativePath.filename().string() + "\" >/dev/null";
                         system(command.c_str());
@@ -164,17 +169,18 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                 }
             }
         }
-    }
-
+    }   
     else {
+        // if not compressed then copy file to outputLocation
         fs::copy(fileLocation, outputLocation, fs::copy_options::overwrite_existing);
-    
+
     }   
     backupLocations.erase(backupLocations.begin());
+    //iterate over every backup needed to recover file 
     for(fs::path location : backupLocations){
         std::string diffLocation = (backupFolder/location/relativePath).string();
-        
-        //std::cout<<backupFolder / "backupMaps"/ location.filename()<<std::endl;
+
+        //if file exists then backup used compression 
         if(doesPathExist(backupFolder / "backupMaps" / location.filename()))
         {
             std::ifstream f;
@@ -201,10 +207,10 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                             system(command.c_str());
                             //gets put in relative path like 123/abc where currently just want /abc here 
                             //fix could be to put into compression just the abc part not the other sections
-                            
+
 
                             diffLocation = outputLocation.parent_path()/"tarFolder" / relativePath.filename();
-                        
+
                             found=true;
                             break;
                         }
@@ -216,6 +222,7 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                 //std::cout<<"file not found in backup : "<<location<<std::endl;
                 continue;
             }
+            
         }
         else{
             if(!doesPathExist(diffLocation)){
@@ -240,20 +247,21 @@ fs::path recoverFilesRecursively(fs::path relativePath, std::vector<fs::path> ba
     files.erase(files.begin());
     std::vector<std::string> filesToRecover;
     std::cout<<relativePath.string()<<std::endl;
+
     for(std::string file: files){
-        //std::cout<<file<<std::endl;
+        //finds start of string at size of base path and removes / from start of file
         file = file.substr(basePath.size());
         if(file.at(0) == '/' ){
             file = file.substr(1);
         }
-        //std::cout<<file<<std::endl;
+        //checks if relativePath is in string 
         std::string::size_type index = file.find(relativePath.string(), 0);
-        //std::cout<<index<<std::endl;
         if(index != 0){
             continue;
         }
         filesToRecover.push_back(file);
     }
+    //iterate over every file in filesToRecover and recovers it
     for(std::string file: filesToRecover){
         //finds path relative to the relativePath path, e.g. Documents/work/2.pdf and Documents/  outputs work/2.pdf 
         std::cout<<file<<std::endl;
@@ -287,7 +295,7 @@ std::vector<fs::path> findBackups(fs::path path){
         backups.push_back(fs::path{line});
     }
     return backups;
-    
+
 }
 //lastBackup is just the filename of the backup so just {epochTime}{f/i}
 std::vector<fs::path> findBackupRecoveryList(fs::path logLocation, fs::path lastBackup){
@@ -391,6 +399,8 @@ void compressBackupDirectory(fs::path backupLocation, fs::path backupMapFile, lo
     folderQueue.push_back(backupLocation);
     fs::path currentPath;
     std::vector<std::vector<fs::path>> compressionFileList;
+    //iterates over file system
+    //splitting files into a vector of vectors of paths where a vector of paths is a single archive that will be made 
     while(!folderQueue.empty()){
         currentPath = folderQueue.at(0);
         folderQueue.erase(folderQueue.begin());
@@ -429,6 +439,7 @@ void compressBackupDirectory(fs::path backupLocation, fs::path backupMapFile, lo
             compressionFileList.push_back(compressionFiles);
         }
     }
+    //for every list of files in compressionFileList compresses files and deletes left over files
     for(unsigned int i=0; i<compressionFileList.size();i++){
         std::string compressionName = compressAndDeleteFiles(compressionFileList.at(i));
         std::string relativePath = compressionFileList.at(i).at(0).parent_path().string().substr(backupLocation.string().size());
@@ -439,7 +450,7 @@ void compressBackupDirectory(fs::path backupLocation, fs::path backupMapFile, lo
             relativePath=relativePath.substr(1);
         }
         backupMap += relativePath + "\n";
-        
+
         backupMap += compressionName.substr(backupLocation.string().size()+1);
         for(fs::path file : compressionFileList.at(i)){
             backupMap += "," + file.string().substr(backupLocation.string().size()+1);    
@@ -458,30 +469,30 @@ void setupSystemdTimer(){
     std::string homeDir = std::getenv("HOME");
     std::string serviceLoc = homeDir + "/.config/systemd/user/TimeMachine.service";
     std::string timerLoc = homeDir+ "/.config/systemd/user/TimeMachine.timer";
-    
+
     std::string serviceStr = R""""(
-[Unit]
-Description=TimeMachine is a differential backup system
+        [Unit]
+        Description=TimeMachine is a differential backup system
 
-[Service]
-ExecStart=/usr/local/bin/timeMachineCLI
-Type=simple
+        [Service]
+        ExecStart=/usr/local/bin/timeMachineCLI
+        Type=simple
 
 
-[Install]
-WantedBy=default.target
+        [Install]
+        WantedBy=default.target
     )"""";
 
     std::string timerStr = R""""(
-[Unit]
-Description=Schedule timeMachineCLI to be ran repeatedly 
+        [Unit]
+        Description=Schedule timeMachineCLI to be ran repeatedly 
 
-[Timer]
-OnBootSec=15min
-OnUnitActiveSec=1h
+        [Timer]
+        OnBootSec=15min
+        OnUnitActiveSec=1h
 
-[Install]
-WantedBy=timers.target
+        [Install]
+        WantedBy=timers.target
     )"""";
 
 
@@ -494,14 +505,14 @@ WantedBy=timers.target
 
 void setupConfigFile(std::string inputLoc, std::string outputLoc, int schedule = 3600, int backupRatio = 50, bool compression=true){
     std::string text = "[input]\n"
-            +inputLoc
-            +"\n[output]\n"
-            +outputLoc
-            +"\n[schedule]\n"
-            +std::to_string(schedule)
-            +"\n[backupRatio]\n"
-            +std::to_string(backupRatio)
-            +"\n[compression]\n";
+        +inputLoc
+        +"\n[output]\n"
+        +outputLoc
+        +"\n[schedule]\n"
+        +std::to_string(schedule)
+        +"\n[backupRatio]\n"
+        +std::to_string(backupRatio)
+        +"\n[compression]\n";
     if (compression)text+="true";
     else text+="false";
     std::string configLoc = std::string(std::getenv("HOME")) + "/.config/TimeMachine/config.conf";

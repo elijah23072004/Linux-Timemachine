@@ -23,6 +23,7 @@ int handleInput(int argc, char ** argv){
     std::string inputLocation;
     std::string outputLocation;
     std::string configLocation;
+    //if argument 1 is -c then passed a path of specific config file to use as input
     if(strcmp(argv[1], "-c") == 0 ){
         if(argc==2){
             configLocation = std::string(std::getenv("HOME")) + "/.config/LinuxTimeMachine/config.conf";
@@ -32,6 +33,7 @@ int handleInput(int argc, char ** argv){
         }
         return parseConfigFile(configLocation);
     }
+    //if argument  1 in paramets is -r then recover files
     else if(strcmp(argv[1], "-r") ==0){
         if(argc==6){
             fs::path relativePath = fs::path(argv[2]);
@@ -54,6 +56,7 @@ int handleInput(int argc, char ** argv){
         }
     }
     else{
+        //otherwise run backup using paramers and flags passed to function
         inputLocation = argv[1];
         outputLocation = argv[2];
         std::string flags = argv[3];
@@ -133,12 +136,13 @@ int parseConfigFile(std::string fileLocation){
     std::string backupMode="";
     bool compression = false;
     bool includeHiddenFiles=false;
-    bool schedule;
     //how many x differential backups till a full backup should be done 
+    bool schedule= false;
     int backupRatio = 0;
-    int frequency = 0;
     std::ifstream myFile(fileLocation);
     std::string text;
+
+    //reads text file in fileLocation line by line reading corresponding parameters from [key] where key is parameter name
     while (getline(myFile, text)){
         text = trimWhitespace(text);
         if(text == "[input]"){
@@ -173,21 +177,6 @@ int parseConfigFile(std::string fileLocation){
                 throw std::invalid_argument("Invalid backup Mode in config file");
             }
         }
-        else if(text == "[schedule]"){
-            if(backupMode != ""){
-                throw std::invalid_argument("Cannot schedule backups with a backup mode set");
-            }
-            if(schedule){
-                throw std::invalid_argument("cannot schedule twice in backup file");
-            }
-            schedule=true;
-            getline(myFile,text);
-            text = trimWhitespace(text);
-            frequency= stoi(text);
-            if(frequency <=0){
-                throw std::invalid_argument("cannot have time between backups at zero or below");
-            }
-        }
         else if(text =="[backupRatio]"){
             if(backupMode != ""){
                 throw std::invalid_argument("Cannot schedule backups with a backup mode set");
@@ -198,6 +187,7 @@ int parseConfigFile(std::string fileLocation){
             getline(myFile,text);
             text = trimWhitespace(text);
             backupRatio = stoi(text);
+            schedule=true;
             if(backupRatio <0){
                 throw std::invalid_argument("cannot have ratio between backups as a negative number");
             }
@@ -238,8 +228,6 @@ int parseConfigFile(std::string fileLocation){
         throw std::invalid_argument("empty field in config file");
     }
     if(schedule){
-        //need to set systemd timer to be the frequency 
-        //will need to be checked to see if timer is already set and right frequency
 
         int numberPreviousBackups = findRecentBackups(outputLocation).size();
         std::cout<<numberPreviousBackups -1 << " backups done since last full backup" <<std::endl;

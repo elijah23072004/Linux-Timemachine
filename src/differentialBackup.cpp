@@ -9,13 +9,15 @@
 #include <cstdlib>
 #include <fstream>
 namespace fs = std::filesystem;
-
+//returns true if modification data of file is after time where time is epochTime, otherwise returns false
 bool isFileModifiedAfterTime(fs::path file, long time){
     struct stat result;
     stat(file.c_str(), &result);
     return result.st_mtime >= time;
     
 }
+//iterates over every file inside directory path and will return a vector storing every file in directory 
+//where the modification date is after prevTime
 //will not include outputPath in return vector 
 std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime, fs::path outputPath, bool includeHiddenFiles=false){
 
@@ -46,20 +48,17 @@ std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime, fs::path 
     return changedFiles;
 }
 
-
-
-
+//calculates the diff of inputFile from oldFile and stores output in destinationLocation
 int calcualteAndStoreDiffFile(fs::path inputFile, fs::path oldFile, fs::path destinationLocation){
     // -N makes sure that absent files are counted as empty
     std::string command = "diff " + oldFile.string() + " " +  inputFile.string() 
         + " -N "  +  " > " + destinationLocation.string();
-    //std::cout<<command<<std::endl;
     return system(command.data());
 }
 
 
-//differentialBackup takes 2 arguments 
-//currently just finds last full backup and compares to it
+//Differential backup will run a differential backup in outputPath, storing file deltas of changed files and outputPath with 
+//backup name being epoch time of current backup
 //input path which is the path for everything inside folder path to be backed up 
 //outputPath which is the path for everything to be backed up to
 //returns 0 for sucess, 1 for out of space error, 2 if either path is not a folder,#
@@ -69,12 +68,13 @@ int calcualteAndStoreDiffFile(fs::path inputFile, fs::path oldFile, fs::path des
 int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression=false, bool includeHiddenFiles=false){
     if(!(isDirectory(inputPath) && isDirectory(outputPath))) return 2;
     long epochTime = std::time(0);
+    //if backup already exists return
     if(doesEpochBackupExists(outputPath, epochTime)) return 3;
 
     std::vector<fs::path> backups = findRecentBackups(outputPath);
     long lastBackupTime= std::stoll(backups.at(backups.size()-1).string().substr(0, backups.at(0).string().size()-1));
     
-   
+    //if no previous backups return (as full backup will be needed to be executed first) 
     if(lastBackupTime ==0){return 5;}
 
 
@@ -87,9 +87,9 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
     
     std::vector<fs::path> changedFiles = getAllChangedFiles(inputPath, lastBackupTime, outputFolder, includeHiddenFiles);
     
-    //temparily just store full files (incremental backup) 
     int inputPathLength = inputPath.string().size();
     std::cout<<"number of changed files: "<<changedFiles.size()<<std::endl;
+    //if no changed files then return and do not create backup
     if(changedFiles.size() == 0){
         return 0;
     }
@@ -97,6 +97,7 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
         if(!fs::create_directory(outputPath)) return 4;
     }
     catch (const std::filesystem::filesystem_error &ex){
+        //if file system error (like insufficient write permissions return)
         return 4;
 
     }
@@ -126,9 +127,11 @@ int differentialBackup(fs::path inputPath, fs::path outputPath, bool compression
     fs::path fileTreeDestination = outputFolder / "fileTrees" / newFolderName;
 
     if(compression){
+        //make archives of 32kB
         long compressionSize = 32768;
         compressBackupDirectory(outputPath, outputPath.parent_path() / "backupMaps"/newFolderName, compressionSize);
     }
+    //create log files and save file tree to backup folder
     saveFileTree(inputPath, fileTreeDestination, outputFolder, includeHiddenFiles);
     logBackup(newFolderName, outputFolder);
     return 0;

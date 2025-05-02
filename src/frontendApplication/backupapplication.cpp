@@ -41,7 +41,6 @@ void BackupApplication::on_activate(){
     try{
         //application is started so show a window
         auto appwindow = create_appwindow();
-
         appwindow->present();
         appwindow->setElementWidths();
     }

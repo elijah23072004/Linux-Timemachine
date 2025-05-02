@@ -53,12 +53,6 @@ RecoverAppWindow::RecoverAppWindow(BaseObjectType* cobject, const Glib::RefPtr<G
     m_errLabel = m_refBuilder->get_widget<Gtk::Label>("errLabel");
     if(!m_errLabel)
         throw std::runtime_error("No \"errLabel\" object in recover.ui");
-    //m_dialog = m_refBuilder->get_widget<Gtk::FileDialog>("fileDialog");
-    //if(!m_dialog)
-    //{
-            //m_dialog = Gtk::FileDialog::Create();
-        //throw std::runtime_error("No \"fileDialog\" object in recover.ui");
-    //}
      
 }
 
@@ -118,7 +112,6 @@ void RecoverAppWindow::restoreClicked()
         m_errLabel->set_label("Please select files to restore");
         return;
     }
-    //std::vector<fs::path> backupLocations = findBackupRecoveryList(backupLocation/"backups.log",selectedBackup);
     selectedBackup = backupLocation.filename();
     backupLocation=backupLocation.parent_path();
     std::string commandStart ="timeMachineCLI -r ";

@@ -11,15 +11,18 @@
 
 namespace fs = std::filesystem;
 
-//fullbackup takes 2 arguments 
+//fullbackup runs a full backup storing all files from inputPath in outputPath and will compress the backup if compression is true otherwise will not compress backup
 //input path which is the path for everything inside folder path to be backed up 
 //outputPath which is the path for everything to be backed up to
-//returns 0 for sucess, 1 for out of space error, 2 if either path is not a folder,#
+//returns 0 for sucess, 1 for out of space error
+//2 if either path is not a folder
 //3 if folder with same epoch time already exist 
 //4 if invalid permissions for either inputPath or outputPath 
 int fullBackup(fs::path inputPath, fs::path outputPath, bool compression=false, bool includeHiddenFiles=false){
+    //if either of inputPath or outputPath is not a directory return 
     if(!(isDirectory(inputPath) && isDirectory(outputPath))) return 2;
     long epochTime = std::time(0);
+    //if backup already exists return
     if(doesEpochBackupExists(outputPath, epochTime)) return 3;
     fs::path unchangedOutputPath = outputPath;
     std::string newFolderName = std::to_string(epochTime) + "f"; 
