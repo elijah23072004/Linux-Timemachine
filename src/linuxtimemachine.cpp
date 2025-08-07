@@ -6,254 +6,229 @@
 #include "utils.cpp"
 #include "fullBackup.cpp"
 #include "differentialBackup.cpp"
-
+#include "backupHandler.h"
 #define PROJECT_NAME "linuxTimeMachine"
-int handleInput(int,char **);
-int parseConfigFile(std::string);
-int main(int argc, char **argv) {
 
-    if(argc == 1) {
-        std::string defaultLocation = std::string(std::getenv("HOME")) + "/.config/TimeMachine/config.conf";
-        return parseConfigFile(defaultLocation);;
-    }
-    return handleInput(argc,argv);
+BackupHandler::BackupHandler(){
+    this->configFileLocation = std::string(std::getenv("HOME")) + "/.config/TimeMachine/config.conf";
+    parseConfigFile();
+
 }
+BackupHandler::BackupHandler(int argc, char** argv){
+    if(argc ==1){
+        this->configFileLocation=std::string(std::getenv("HOME"))+"/.config/TimeMachine/config.conf";
+        parseConfigFile();
+        return;
+    }
+    handleArguments(argc,argv);
 
-int handleInput(int argc, char ** argv){
-    std::string inputLocation;
-    std::string outputLocation;
-    std::string configLocation;
-    //if argument 1 is -c then passed a path of specific config file to use as input
+}
+void BackupHandler::handleArguments(int argc, char** argv){
+    if(strcmp(argv[1], "-h") == 0  || strcmp(argv[1], "--help")==0){
+        this->outputHelp();
+        return;
+    }
     if(strcmp(argv[1], "-c") == 0 ){
         if(argc==2){
-            configLocation = std::string(std::getenv("HOME")) + "/.config/LinuxTimeMachine/config.conf";
+            this->configFileLocation = std::string(std::getenv("HOME")) + "/.config/LinuxTimeMachine/config.conf";
         }
         else{
-            configLocation=argv[2];
+            this->configFileLocation=argv[2];
         }
-        return parseConfigFile(configLocation);
+        this->parseConfigFile();
+        return;
     }
-    //if argument  1 in paramets is -r then recover files
+    //if argument  1 in parameters is -r then recover files
     else if(strcmp(argv[1], "-r") ==0){
         if(argc==6){
             fs::path relativePath = fs::path(argv[2]);
-            fs::path outputLocation = argv[4];
-            fs::path backupFolderLocation= argv[3];
+            this->outputLocation = argv[4];
+            this->backupFolderLocation= argv[3];
             //relative path relative to backup folder location and the epoch time {i/f} folder after  
             fs::path backup = argv[5];
 
             std::cout<<relativePath.string()<<std::endl;
-            std::cout<<backupFolderLocation.string()<<std::endl;
-            std::cout<<outputLocation.string()<<std::endl;
+            std::cout<<this->backupFolderLocation.string()<<std::endl;
+            std::cout<<this->outputLocation.string()<<std::endl;
             std::vector<fs::path> backupLocations = findBackupRecoveryList(backupFolderLocation, backup);
-            std::cout << recoverFilesRecursively(relativePath, backupLocations, outputLocation, backupFolderLocation) <<std::endl;
-            return 0;
-            
+            std::cout << recoverFilesRecursively(relativePath, backupLocations, this->outputLocation, backupFolderLocation) <<std::endl;
+            return;
+
         }
         else{
             std::cout<<"please pass arguements for location of file to be recovered, backup folder location  and output location for recovered files and backupId "<<std::endl;
-            return 1;
+            setOutputCode(1);
+            return;
         }
     }
     else{
         //otherwise run backup using paramers and flags passed to function
-        inputLocation = argv[1];
-        outputLocation = argv[2];
+        if(argc <=3){
+            this->outputHelp();
+            return;
+        }
+        this->inputLocation = argv[1];
+        this->outputLocation = argv[2];
+        
         std::string flags = argv[3];
-        bool compression = false;
-        char backupMode = '0';
-        int backupRatio;
         if(flags[0] != '-'){
-            std::cout<<"invalid second argument"<<std::endl;
-            return -1;
+            std::cout<<"invalid string second argument"<<std::endl;
+            setOutputCode(-1);
+            return;
         }
         flags = flags.substr(1);
-        
+
         for(char val : flags){
             if(val == 'c'){
-                if (compression){
+                if (this->compression){
                     std::cout<<"c in flag argument multiple times"<<std::endl;
-                    return -1;
+                    setOutputCode(-1);
+                    return;
                 }
-                compression=true;
+                this->compression=true;
             }
-            else if(val == 'f'){
-                if(backupMode != '0'){
+            else if(val == 'f' || val == 'd' || val == 'r'){
+                if(this->backupMode != '0'){
                     std::cout<<"multiple backup modes in flag argument"<<std::endl;
                 }
-                backupMode ='f'; 
-            }
-            else if (val == 'd'){
-                if(backupMode != '0'){
-                    std::cout<<"multiple backup modes in flag argument"<<std::endl;
-                }
-                backupMode ='d'; 
-            }
-            else if ( val == 'r'){
-                backupRatio = std::stoi(argv[4]);
-                if(backupMode != '0'){
-                    std::cout<<"multiple backup modes in flag argument"<<std::endl;
-                }
-                backupMode = 'r';
+                this->backupMode =val; 
+                if(val == 'r')this->backupMode = std::stoi(argv[4]);
             }
         }
-
-        if( backupMode == 'f' ){
-            
-            std::cout<<fullBackup(inputLocation,outputLocation)<<std::endl;
-        }
-        else if (backupMode == 'd'){
-            std::cout<<differentialBackup(inputLocation, outputLocation)<<std::endl;
-        }
-        else if (backupMode == 'r'){
-            
-            int numberPreviousBackups = findRecentBackups(outputLocation).size();
-            std::cout<<numberPreviousBackups -1 << " backups done since last full backup" <<std::endl;
-            if(numberPreviousBackups == 0 || numberPreviousBackups>=backupRatio){
-                std::cout<<fullBackup(inputLocation,outputLocation, compression)<<std::endl;
-                return 0;
-            }
-            else{
-                std::cout<<differentialBackup(inputLocation,outputLocation, compression)<<std::endl;
-                return 0;
-            }
-            }
-            else{
-                std::cout<<"invalid backup mode"<<std::endl;
-            }
+        this->executeBackup();
     }
-    return 0;
+    return;
+
 }
 
-
-
-int parseConfigFile(std::string fileLocation){
-    if(!doesPathExist(fileLocation)){
-        throw std::invalid_argument(fileLocation + " does not exist");
+void BackupHandler::executeBackup(){
+    if( this->backupMode == 'f' ){
+        std::cout<<fullBackup(this->inputLocation,this->outputLocation)<<std::endl;
     }
-    std::string inputLocation="";
-    std::string outputLocation="";
-    std::string backupMode="";
-    bool compression = false;
-    bool includeHiddenFiles=false;
+    else if (this->backupMode == 'd'){
+        std::cout<<differentialBackup(this->inputLocation, this->outputLocation)<<std::endl;
+    }
+    else if (this->backupMode == 'r'){
+        int numberPreviousBackups = findRecentBackups(this->outputLocation).size();
+        std::cout<<numberPreviousBackups -1 << " backups done since last full backup" <<std::endl;
+        if(numberPreviousBackups == 0 || numberPreviousBackups>=this->backupRatio){
+            std::cout<<fullBackup(this->inputLocation,this->outputLocation, this->compression)<<std::endl;
+        }
+        else{
+            std::cout<<differentialBackup(this->inputLocation,this->outputLocation, this->compression)<<std::endl;
+        }
+    }
+    else{
+        throw std::invalid_argument(std::string("invalid backup mode :")+this->backupMode);
+    }
+    return;
+}
+void BackupHandler::setOutputCode(int code){
+    this->outputCode=code;
+}
+int BackupHandler::getOutputCode(){
+    return this->outputCode;
+}
+void BackupHandler::parseConfigFile(){
+    if(!doesPathExist(configFileLocation.string())){
+        throw std::invalid_argument(configFileLocation.string() + " does not exist");
+    }
     //how many x differential backups till a full backup should be done 
-    bool schedule= false;
-    int backupRatio = 0;
-    std::ifstream myFile(fileLocation);
+    std::ifstream myFile(configFileLocation);
     std::string text;
 
     //reads text file in fileLocation line by line reading corresponding parameters from [key] where key is parameter name
     while (getline(myFile, text)){
         text = trimWhitespace(text);
         if(text == "[input]"){
-            if(inputLocation != ""){
+            if(!this->inputLocation.empty()){
                 throw std::invalid_argument("Multiple input locations in file");
             }
             getline(myFile,text);
             text=trimWhitespace(text);
-            inputLocation = text;
+            this->inputLocation = text;
         }
         else if(text == "[output]"){
-            if(outputLocation != ""){
+            if(!this->outputLocation.empty()){
                 throw std::invalid_argument("Multiple output locations in config file");
             }
             getline(myFile,text);
             text=trimWhitespace(text);
-            outputLocation=text;
+            this->outputLocation=text;
         }
         else if(text == "[backupMode]"){
-            if(backupMode != ""){
+            if(this->backupMode != '0'){
                 throw std::invalid_argument("Multiple backup modes in config file");
             }
             getline(myFile,text);
             text=trimWhitespace(text);
-            if(text=="full"){
-                backupMode="full";
-            }
-            else if(text=="diff"){
-                backupMode="diff";
+            if(text=="full" || text=="diff"){
+                this->backupMode=text[0];
             }
             else{
                 throw std::invalid_argument("Invalid backup Mode in config file");
             }
         }
         else if(text =="[backupRatio]"){
-            if(backupMode != ""){
+            if(this->backupMode != '0'){
                 throw std::invalid_argument("Cannot schedule backups with a backup mode set");
             }
-            if(backupRatio != 0){
+            if(this->backupRatio != 0){
                 throw std::invalid_argument("cannot have 2 backup ratios in backup file");
             }
             getline(myFile,text);
             text = trimWhitespace(text);
-            backupRatio = stoi(text);
-            schedule=true;
-            if(backupRatio <0){
+            this->backupRatio = stoi(text);
+            this->backupMode = 'r';
+            if(this->backupRatio <0){
                 throw std::invalid_argument("cannot have ratio between backups as a negative number");
             }
         }
         else if(text =="[compression]"){
             getline(myFile,text);
             text = trimWhitespace(text);
-            if(text == "true"){
-                compression=true;
-            }
-            else if(text == "false"){
-                compression=false;
-            }
-            else{
+            if(text!="true" && text != "false"){
                 throw std::invalid_argument("compression must be either true or false");
             }
+            this->compression=(text=="true");
         }
         else if(text =="[includeHiddenFiles]"){
             getline(myFile,text);
             text = trimWhitespace(text);
-            if(text == "true"){
-                includeHiddenFiles=true;
+            if(text!="true" && text != "false"){
+                throw std::invalid_argument("include hidden files must be either true or false");
             }
-            else if(text=="false"){
-
-                includeHiddenFiles=false;    
-            }
-            else{
-                throw std::invalid_argument("include hidden files must be either true of false");
-            }
+            this->includeHiddenFiles=(text=="true");
         }
     }
-    if(inputLocation.empty() || outputLocation.empty() || (backupMode.empty() && !schedule )) {
+    if(this->inputLocation.empty() || this->outputLocation.empty() || this->backupMode == '0') {
         std::cout<<"field empty in "<<std::endl;
-        std::cout<<"input location: "<<inputLocation<<std::endl;
-        std::cout<<"output location: "<<outputLocation<<std::endl;
-        std::cout<<"backup mode: "<<backupMode<<std::endl;
+        std::cout<<"input location: "<<this->inputLocation.string()<<std::endl;
+        std::cout<<"output location: "<<this->outputLocation.string()<<std::endl;
+        std::cout<<"backup mode: "<<this->backupMode<<std::endl;
         throw std::invalid_argument("empty field in config file");
     }
-    if(schedule){
+    executeBackup();
 
-        int numberPreviousBackups = findRecentBackups(outputLocation).size();
-        std::cout<<numberPreviousBackups -1 << " backups done since last full backup" <<std::endl;
-        if(numberPreviousBackups == 0 || numberPreviousBackups>=backupRatio){
-            std::cout<<fullBackup(inputLocation,outputLocation, compression, includeHiddenFiles)<<std::endl;
-            return 0;
-        }
-        else{
-            std::cout<<differentialBackup(inputLocation,outputLocation, compression, includeHiddenFiles)<<std::endl;
-            return 0;
-        }
-    }
-    else if(backupMode == "full"){
-        std::cout<<fullBackup(inputLocation,outputLocation)<<std::endl;
-        return 0;
-    }
-    else if(backupMode == "diff"){
-        std::cout<<differentialBackup(inputLocation, outputLocation)<<std::endl;
-        return 0;
-    }
-    else{
-        std::cout<<"invalid backup mode of: "<<backupMode<<std::endl;
-        throw std::invalid_argument("Invalid backup Mode");
-    }
+}
 
+void BackupHandler::outputHelp(){
+    std::string text = "TimeMachine a backup program for linux based systems.\n"
+        "example usage \"timeMachineCLI\" - uses config file in config folder\n"
+        "other usage \"timeMachineCLI -c <file>\" uses config file in path in <file>\n"
+        "other usage \"timeMachineCLI <inputLocation> <outputLocation <flags>\n"
+        "to recover file \"timeMachineCLI -r <relativePath> <backupLocation> <outputLocation> <backupName>\"\n"
+        "flags:\n"
+        "-c config file location only works if no other flags and next arument is path of config file and no other aruments\n"
+        "-r recover file see above\n"
+        "-d differential backup\n"
+        "-f full backup\n"
+        "-r auto decide backup type with an extra argument called ratio after which is the number of backups to do where a full backup is done\n"
+        "-c in combination with other flags compression for backup";
 
-
-
+    std::cout<<text<<std::endl;
+}
+int main(int argc, char **argv) {
+    BackupHandler handler = BackupHandler(argc, argv);
+    return handler.getOutputCode();
 }

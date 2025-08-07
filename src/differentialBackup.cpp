@@ -51,8 +51,8 @@ std::vector<fs::path> getAllChangedFiles(fs::path path, long prevTime, fs::path 
 //calculates the diff of inputFile from oldFile and stores output in destinationLocation
 int calcualteAndStoreDiffFile(fs::path inputFile, fs::path oldFile, fs::path destinationLocation){
     // -N makes sure that absent files are counted as empty
-    std::string command = "diff " + oldFile.string() + " " +  inputFile.string() 
-        + " -N "  +  " > " + destinationLocation.string();
+    std::string command = "diff \"" + oldFile.string() + "\" \"" +  inputFile.string() 
+        + "\" -N "  +  " > \"" + destinationLocation.string() + "\"";
     return system(command.data());
 }
 
