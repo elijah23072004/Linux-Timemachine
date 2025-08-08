@@ -7,8 +7,6 @@
 #include <ctime>
 #include <cstdlib>
 #include <set>
-
-
 namespace fs = std::filesystem;
 
 RecoverAppWindow::RecoverAppWindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refBuilder)
@@ -114,20 +112,42 @@ void RecoverAppWindow::restoreClicked()
     }
     selectedBackup = backupLocation.filename();
     backupLocation=backupLocation.parent_path();
-    std::string commandStart ="timeMachineCLI -r ";
-    std::string commandEnd = " " + backupLocation.string() + " " + outputPath + " " + selectedBackup.string(); 
+    //std::string commandStart ="timeMachineCLI -r ";
+    //std::string commandEnd = " " + backupLocation.string() + " " + outputPath + " " + selectedBackup.string(); 
     for(std::string pathToRecover : selectedFiles){
         if(pathToRecover[pathToRecover.size()-1] =='/'){
             pathToRecover=pathToRecover.substr(0,pathToRecover.size()-1);
         }
-        std::string fullCommand = commandStart + pathToRecover + commandEnd;
-        std::cout<<fullCommand<<std::endl;
-        system(fullCommand.c_str());
+        recoverFile(pathToRecover, backupLocation.string());
+
+        //std::string fullCommand = commandStart + pathToRecover + commandEnd;
+        //std::cout<<fullCommand<<std::endl;
+        //system(fullCommand.c_str());
     }
 
 
     app->closeWindow("Recover Files");
 }
+
+void RecoverAppWindow::recoverFile(std::string pathToRecover, std::string backupLocation){
+    std::vector<std::string> arguments = {"timeMachineCLI", "-r", pathToRecover, backupLocation,outputPath,selectedBackup.string()};
+    char** args = (char**)malloc(7*sizeof(char**));
+    for(size_t i=0; i<arguments.size(); i++){
+        args[i] = new char[arguments[i].size()+1];
+        strcpy(args[i], arguments[i].c_str());
+    }
+    args[arguments.size()] = NULL;
+
+    pid_t p = fork();
+    if(p <0){
+        throw std::runtime_error("Could not fork process");
+    }    
+    else if(p==0){
+        execvp(args[0],args);
+    }
+    
+}
+
 void RecoverAppWindow::cancelClicked()
 {
     std::cout<<"cancel" <<std::endl;

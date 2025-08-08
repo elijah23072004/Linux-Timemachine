@@ -5,6 +5,7 @@
 #include <vector>
 #include <filesystem>
 #include <string>
+
 class BackupAppWindow;
 
 class BackupApplication : public Gtk::Application

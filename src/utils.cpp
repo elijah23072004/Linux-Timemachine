@@ -12,7 +12,36 @@
 #include <vector>
 #include <ctime>
 #include <cstring>
+#include <wait.h>
+#include<unistd.h>
 namespace fs = std::filesystem;
+
+int executeCommand(char** arguments){
+    pid_t p = fork();
+    if(p <0){
+        throw std::runtime_error("Could not fork process");
+    }    
+    else if(p>0){
+        //parent process
+        wait(NULL);
+    }
+    else{
+        execvp(arguments[0],arguments);
+    }
+    return 0;
+}
+
+int runCommand(std::vector<std::string> arguments){
+    char** args= (char**)malloc((arguments.size()+1) *sizeof(char**)) ;
+    for(size_t i=0;i<arguments.size();i++){
+        
+        args[i] = new char[arguments[i].size()+1];
+        strcpy(args[i], arguments[i].c_str());
+    }
+    args[arguments.size()]=NULL;
+    return executeCommand(args);
+}
+
 //takes path as arguement and returns true if it exists in filesystem
 bool doesPathExist(fs::path path){
     return  fs::exists(path.string()); 
@@ -159,9 +188,15 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                         //will override file if file with same name exists in directory however should always call this into tmp directory and shouldn't happen since file names 
                         //will have random numeric number
                         //and tmp directory is cleaned up after each backup
-                        std::string command = "tar -zxvf \"" + (backupFolder / backupLocations.at(0) /  files.at(0)).string() 
+                        /*std::string command = "tar -zxvf \"" + (backupFolder / backupLocations.at(0) /  files.at(0)).string() 
                             + "\" --directory=\""+outputLocation.parent_path().string() + "\" \"" + relativePath.filename().string() + "\" >/dev/null";
                         system(command.c_str());
+                        */
+                        std::vector<std::string> arguments = {"tar", "-zxvf", (backupFolder/backupLocations.at(0)/files.at(0)).string(), 
+                            "--directory="+outputLocation.parent_path().string(), relativePath.filename().string()}; 
+                        
+                        runCommand(arguments);
+                        
                         fs::rename(outputLocation.parent_path() / relativePath.filename(), outputLocation);
                         found=true;
                         break;
@@ -202,9 +237,15 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                             //will override file if file with same name exists in directory which will happen if multiple different diff files 
                             //so fix is to put it in a tar folder 
                             fs::create_directory(outputLocation.parent_path()/"tarFolder");
-                            std::string command = "tar -zxvf \"" + (backupFolder / location /  files.at(0)).string() 
-                                + "\" --directory=\""+(outputLocation.parent_path()/"tarFolder").string() + "\" \"" + relativePath.filename().string() + "\" >/dev/null";
-                            system(command.c_str());
+                            //std::string command = "tar -zxvf \"" + (backupFolder / location /  files.at(0)).string() 
+                            //    + "\" --directory=\""+(outputLocation.parent_path()/"tarFolder").string() + "\" \"" + relativePath.filename().string() + "\" >/dev/null";
+                           // system(command.c_str());
+
+                            std::vector<std::string> arguments = {"tar", "-zxvf", (backupFolder/location/files.at(0)).string(), 
+                            "--directory="+(outputLocation.parent_path()/"tarFolder").string(), relativePath.filename().string()}; 
+                        
+                            runCommand(arguments);
+                            
                             //gets put in relative path like 123/abc where currently just want /abc here 
                             //fix could be to put into compression just the abc part not the other sections
 
@@ -229,9 +270,15 @@ fs::path recoverFile(fs::path relativePath, std::vector<fs::path> backupLocation
                 continue;
             }
         }
-        std::string command = "patch -Ns \"" + outputLocation.string() + "\" < \"" + diffLocation + "\" >/dev/null";
+        //std::string command = "patch -Ns \"" + outputLocation.string() + "\" < \"" + diffLocation + "\" >/dev/null";
         //std::cout<<command<<std::endl;
-        system(command.c_str());
+        //system(command.c_str());
+
+                        
+
+        std::vector<std::string> arguments = {"patch", "-Ns", outputLocation.string(), diffLocation};
+        runCommand(arguments);
+
         fs::remove_all(outputLocation.parent_path()/"tarFolder");
     }
     return outputLocation;
@@ -379,13 +426,16 @@ std::string compressAndDeleteFiles(std::vector<fs::path> files){
         i++;
         backupLocation = files.at(0).parent_path() / (std::to_string(i)+".tar");
     }
-    std::string command = "tar czf \"" + backupLocation + "\" -C \"" + files.at(0).parent_path().string() + "\"";
-    for(fs::path file :files){
-        command += " \"" + file.filename().string() + "\"";
-    }
-    command += " >/dev/null";
-    system(command.c_str());
+    std::vector<std::string> arguments = {"tar", "czf", backupLocation, "-C", files.at(0).parent_path().string()};
 
+    //std::string command = "tar czf \"" + backupLocation + "\" -C \"" + files.at(0).parent_path().string() + "\"";
+    for(fs::path file :files){
+        //command += " \"" + file.filename().string() + "\"";
+        arguments.push_back(file.filename().string());   
+    }
+    //command += " >/dev/null";
+    //system(command.c_str());
+    runCommand(arguments);
     for(fs::path file : files){
         fs::remove(file);
     }

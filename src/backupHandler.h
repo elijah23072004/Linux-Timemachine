@@ -25,6 +25,7 @@ class BackupHandler{
     void handleArguments(int argc, char** argv);
     void executeBackup(); 
     void outputHelp();
+    void printConfigFile();
 };
 
 #endif

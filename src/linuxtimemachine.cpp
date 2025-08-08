@@ -15,8 +15,8 @@ BackupHandler::BackupHandler(){
 
 }
 BackupHandler::BackupHandler(int argc, char** argv){
+    this->configFileLocation=std::string(std::getenv("HOME"))+"/.config/TimeMachine/config.conf";
     if(argc ==1){
-        this->configFileLocation=std::string(std::getenv("HOME"))+"/.config/TimeMachine/config.conf";
         parseConfigFile();
         return;
     }
@@ -28,11 +28,12 @@ void BackupHandler::handleArguments(int argc, char** argv){
         this->outputHelp();
         return;
     }
+    if(strcmp(argv[1], "-p") == 0 || strcmp(argv[1], "--print")==0){
+        this->printConfigFile();
+        return;
+    }
     if(strcmp(argv[1], "-c") == 0 ){
-        if(argc==2){
-            this->configFileLocation = std::string(std::getenv("HOME")) + "/.config/LinuxTimeMachine/config.conf";
-        }
-        else{
+        if(argc!=2){
             this->configFileLocation=argv[2];
         }
         this->parseConfigFile();
@@ -214,6 +215,8 @@ void BackupHandler::parseConfigFile(){
 
 void BackupHandler::outputHelp(){
     std::string text = "TimeMachine a backup program for linux based systems.\n"
+        "--help or -h for help\n"
+        "-p or --print to print config file\n"
         "example usage \"timeMachineCLI\" - uses config file in config folder\n"
         "other usage \"timeMachineCLI -c <file>\" uses config file in path in <file>\n"
         "other usage \"timeMachineCLI <inputLocation> <outputLocation <flags>\n"
@@ -227,6 +230,19 @@ void BackupHandler::outputHelp(){
         "-c in combination with other flags compression for backup";
 
     std::cout<<text<<std::endl;
+}
+void BackupHandler::printConfigFile(){
+    if(!doesPathExist(configFileLocation.string())){
+        throw std::invalid_argument(configFileLocation.string() + " does not exist");
+    }
+    //how many x differential backups till a full backup should be done 
+    std::ifstream myFile(configFileLocation);
+    std::string text;   
+    std::cout<<"Config file contents from file: " <<configFileLocation<<std::endl;
+    while(getline(myFile,text)){
+        std::cout<<text<<std::endl;
+    }
+
 }
 int main(int argc, char **argv) {
     BackupHandler handler = BackupHandler(argc, argv);

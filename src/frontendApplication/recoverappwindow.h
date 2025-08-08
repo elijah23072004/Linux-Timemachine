@@ -20,6 +20,7 @@ public:
     void openFileDialog();
     void onSelect(Glib::RefPtr<Gio::AsyncResult>& result, Glib::RefPtr<Gtk::FileDialog> &dialog);
     void populateListBox(std::vector<std::string> files);
+    void recoverFile(std::string pathToRecover, std::string backupLocation);
     std::filesystem::path backupLocation;
     std::filesystem::path selectedBackup;
 protected:
